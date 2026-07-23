@@ -1,0 +1,29 @@
+{
+  "openssl": {
+    "1.1.1d": [
+      {
+        "cve_id": "CVE-2022-0778",
+        "severity": "HIGH",
+        "description": "Infinite loop in BN_mod_sqrt may cause DoS."
+      }
+    ]
+  },
+  "busybox": {
+    "1.31.1": [
+      {
+        "cve_id": "CVE-2021-42374",
+        "severity": "MEDIUM",
+        "description": "Potential out-of-bounds read in ash parser."
+      }
+    ]
+  },
+  "dropbear": {
+    "2020.81": [
+      {
+        "cve_id": "CVE-2020-36254",
+        "severity": "LOW",
+        "description": "Memory consumption issue under malformed traffic."
+      }
+    ]
+  }
+}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FLENS Scan Report</title>
+  <style>
+    :root {
+      --bg: #f7f4ef;
+      --panel: #ffffff;
+      --ink: #1f2a37;
+      --muted: #5b6470;
+      --accent: #0f766e;
+      --danger: #b91c1c;
+      --warn: #b45309;
+      --ok: #166534;
+      --border: #d8d0c5;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Source Sans 3", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top right, #e6f7f5, var(--bg) 55%);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ecfeff, #fefce8);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+      animation: reveal 360ms ease-out;
+    }
+
+    h1, h2 {
+      margin: 0 0 0.65rem;
+      font-family: "Merriweather", Georgia, serif;
+    }
+
+    .risk {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-top: 0.75rem;
+    }
+
+    .risk-low { color: var(--ok); }
+    .risk-medium { color: var(--warn); }
+    .risk-high, .risk-critical { color: var(--danger); }
+
+    .panel {
+      margin-top: 1rem;
+      background: var(--panel);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      animation: reveal 460ms ease-out;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.55rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    @keyframes reveal {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="hero">
+      <h1>FLENS Firmware Security Report</h1>
+      <p>Phase 1 rootfs analysis output.</p>
+      <div class="risk risk-{{ scan_result.risk_score.lower() }}">Risk Score: {{ scan_result.risk_score }}</div>
+    </section>
+
+    <section class="panel">
+      <h2>Detected Components</h2>
+      {% if scan_result.components %}
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Version</th></tr>
+        </thead>
+        <tbody>
+        {% for component in scan_result.components %}
+          <tr><td>{{ component.name }}</td><td>{{ component.version }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="empty">No known components detected.</p>
+      {% endif %}
+    </section>
+
+    <section class="panel">
+      <h2>Vulnerabilities</h2>
+      {% if scan_result.vulnerabilities %}
+      <table>
+        <thead>
+          <tr><th>CVE</th><th>Severity</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+        {% for vulnerability in scan_result.vulnerabilities %}
+          <tr>
+            <td>{{ vulnerability.cve_id }}</td>
+            <td>{{ vulnerability.severity }}</td>
+            <td>{{ vulnerability.description }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="empty">No matching CVEs found.</p>
+      {% endif %}
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,119 @@
+Metadata-Version: 2.4
+Name: flens
+Version: 0.1.0
+Summary: Firmware Linux Embedded Security platform - Phase 1 MVP
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi<1.0.0,>=0.116.0
+Requires-Dist: jinja2<4.0.0,>=3.1.4
+Requires-Dist: pydantic<3.0.0,>=2.9.0
+Requires-Dist: typer<1.0.0,>=0.16.0
+Provides-Extra: dev
+Requires-Dist: mypy<2.0.0,>=1.11.0; extra == "dev"
+Requires-Dist: pytest<9.0.0,>=8.3.0; extra == "dev"
+Requires-Dist: pytest-cov<6.0.0,>=5.0.0; extra == "dev"
+Requires-Dist: ruff<1.0.0,>=0.6.0; extra == "dev"
+
+# FLENS - Firmware Linux Embedded Security
+
+FLENS is a firmware security analysis platform for embedded Linux environments. This repository contains **Phase 1 MVP**, focused on scanning an extracted root filesystem and producing actionable risk output.
+
+## Phase 1 Scope
+
+- Detect known components from a rootfs (busybox, openssl, dropbear)
+- Resolve versions via swappable version parser strategy
+- Match vulnerabilities from a JSON CVE provider
+- Calculate configurable overall risk score
+- Provide CLI scan command
+- Generate HTML reports with Jinja2
+- Expose a baseline FastAPI interface for future dashboard integration
+
+## Clean Architecture Layout
+
+```text
+flens/
+├── app/
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   ├── presentation/
+│   └── config/
+├── tests/
+├── sample_data/
+├── docs/
+└── pyproject.toml
+```
+
+## Quick Start
+
+1. Create and activate a Python 3.12+ virtual environment.
+2. Install dependencies:
+
+```bash
+pip install -e .[dev]
+```
+
+3. Run scan:
+
+```bash
+flens scan sample_data/rootfs --report-out sample_data/report.html
+```
+
+4. Run quality gates:
+
+```bash
+ruff check .
+mypy .
+pytest -v
+pytest --cov
+```
+
+## CLI Usage
+
+```bash
+flens scan <rootfs_path> [--report-out report.html]
+```
+
+Outputs:
+- Detected components
+- Matched vulnerabilities
+- Final risk score
+- Optional HTML report file
+
+## FastAPI Usage
+
+Start a local API server:
+
+```bash
+uvicorn app.presentation.api.main:api --reload
+```
+
+Endpoints:
+- `GET /health`
+- `POST /scan`
+
+Example payload:
+
+```json
+{
+  "rootfs_path": "sample_data/rootfs"
+}
+```
+
+## Extensibility Contracts Ready for Future Phases
+
+The domain layer already defines stable interfaces for:
+- Firmware extraction
+- SBOM generation
+- Secret scanning
+- Firmware comparison
+- CVE feed refresh providers
+
+This allows Phase 2+ capability additions without modifying core use-case orchestration.
+
+## Documentation
+
+- Architecture: `docs/architecture.md`
+- Development guide: `docs/development.md`
+- Roadmap: `docs/roadmap.md`
+- Example report: `docs/example_report.html`
