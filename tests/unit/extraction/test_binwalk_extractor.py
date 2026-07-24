@@ -29,7 +29,7 @@ def test_binwalk_success(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Non
     monkeypatch.setattr(BINWALK_WHICH_TARGET, lambda _: "binwalk")
 
     def fake_run(command: list[str]) -> subprocess.CompletedProcess[str]:
-        out_dir = Path(command[3])
+        out_dir = Path(command[command.index("--directory") + 1])
         rootfs = out_dir / "firmware.bin.extracted" / "rootfs"
         (rootfs / "bin").mkdir(parents=True)
         (rootfs / "usr").mkdir(parents=True)
@@ -42,6 +42,7 @@ def test_binwalk_success(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Non
 
     assert result.filesystem_type == "SquashFS"
     assert result.extracted_path.name == "rootfs"
+    assert "--run-as=root" in result.metadata["command"]
 
 
 def test_binwalk_extraction_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

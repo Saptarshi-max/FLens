@@ -1,10 +1,10 @@
 # FLENS
 
-### Firmware Linux Embedded Security
+![flens-logo](/flens.jpeg)
 
-Analyze embedded Linux firmware, identify software components, map known vulnerabilities, and generate actionable security reports.
+Flens can analyze embedded Linux firmware, identify software components, map known vulnerabilities, and generate actionable security reports.
 
-FLENS is a Python-based firmware security analysis platform designed for embedded Linux systems such as routers, IoT gateways, industrial controllers, cameras, and edge devices.
+FLENS is a Python-based CLI firmware security analysis tool designed for embedded Linux systems such as routers, IoT gateways, industrial controllers, cameras, and edge devices.
 
 The project aims to bring firmware security closer to embedded software development by combining component discovery, vulnerability identification, risk assessment, and reporting into an extensible engineering workflow.
 
@@ -12,7 +12,6 @@ The project aims to bring firmware security closer to embedded software developm
 
 ## Why FLENS?
 
-![flens-logo](/flens.jpeg)
 
 Firmware often contains hundreds of third-party components:
 
@@ -107,6 +106,35 @@ Risk Level: HIGH
 
 Produces human-readable HTML reports suitable for audits, reviews, and release validation.
 
+Reports include:
+
+* Risk score breakdown
+* Vulnerability detection explanation
+* Transparency & methodology references
+* Security disclaimer
+
+### SBOM Generation
+
+Generates machine-readable SBOMs in both CycloneDX JSON and SPDX JSON formats for each scan.
+
+### Persistent Scan History
+
+Stores scan artifacts in SQLite for report retrieval and auditability:
+
+* Components
+* Vulnerabilities
+* Risk score
+* SBOM payloads
+* Firmware metadata
+
+### Firmware Metadata + ELF Intelligence
+
+Enhances detection with:
+
+* ELF architecture parsing
+* Binary string fingerprints for component identification fallback
+* Firmware kernel and vendor hints from extracted rootfs
+
 ---
 
 ## Example Scan
@@ -187,7 +215,44 @@ flens/
 
 ---
 
+## Prerequisites
+
+Before running FLENS, make sure the following are in place:
+
+* Python 3.12+
+* The same virtual environment is used for install and runtime
+* Python dependencies installed with `pip install -e .[dev]`
+* For firmware image analysis, native extraction tools installed in the same shell/environment:
+        * `binwalk`
+        * `squashfs-tools`
+
+If you run `flens` from a different Python environment than the one used for installation, you can get missing-module errors or incomplete analysis. For firmware reports, that can also lead to misleading output, so it is better to stop and fix the environment first.
+
+Recommended Windows workflow:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+pip install -e .[dev]
+```
+
 ## Quick Start
+
+### Choose the Right Command
+
+| Input you have | Command to use | When Docker is useful |
+| --- | --- | --- |
+| An extracted firmware directory, such as `squashfs-root/` | `flens scan <rootfs-path>` | Optional; Python dependencies are sufficient. |
+| A firmware image, such as `.bin`, `.img`, or `.trx` | `flens firmware <firmware-path>` | Recommended on Windows or when `binwalk` and `squashfs-tools` are not installed locally. |
+
+`flens scan` does not extract firmware. Passing a `.bin` file to it will not find components because it expects a directory of extracted files. Use `flens firmware` for the image first.
+
+Navigate the CLI with:
+
+```powershell
+flens --help
+flens scan --help
+flens firmware --help
+```
 
 Install:
 
@@ -206,6 +271,55 @@ Generate an HTML report:
 ```bash
 flens scan sample_data/rootfs \
     --report-out report.html
+```
+
+Generate SBOM exports (SPDX + CycloneDX):
+
+```bash
+flens scan sample_data/rootfs \
+        --report-out output/report.html \
+        --sbom-out output
+```
+
+## Example Reports
+
+| Rootfs fixture | OpenWrt firmware image |
+| --- | --- |
+| <img src="docs/images/rootfs-fixture-report.png" alt="HTML report for the controlled rootfs fixture" width="450"> | <img src="docs/images/openwrt-report.png" alt="HTML report for an extracted OpenWrt firmware image" width="450"> |
+
+The rootfs fixture is deliberately small and deterministic: it contains placeholder binaries for BusyBox, Dropbear, and OpenSSL. It is useful for quick CLI and report tests.
+
+The OpenWrt example is produced by extracting a real `squashfs-sysupgrade.bin` firmware image. It demonstrates the complete extraction-to-report workflow. Current component versions and CVE matches come from FLENS's bundled static test dataset, so treat the findings as pipeline examples rather than a production vulnerability assessment.
+
+Analyze a firmware image directly:
+
+```bash
+flens firmware sample_data/firmware/sample_router.bin --report-out firmware_report.html
+```
+
+Analyze firmware image and export SBOMs:
+
+```bash
+flens firmware sample_data/firmware/sample_router.bin \
+        --report-out output/report.html \
+        --sbom-out output
+```
+
+Generated files:
+
+```text
+output/
+├── report.html
+├── report.spdx.json
+└── report.cyclonedx.json
+```
+
+Optional: set FLENS_REPOSITORY_URL to render clickable methodology links in HTML reports.
+
+Example:
+
+```bash
+set FLENS_REPOSITORY_URL=https://github.com/example/flens
 ```
 
 ---
@@ -229,6 +343,35 @@ Available endpoints:
 ```http
 GET  /health
 POST /scan
+POST /firmware/upload
+GET  /reports/{report_id}
+```
+
+Example scan request:
+
+```json
+{
+        "rootfs_path": "sample_data/rootfs"
+}
+```
+
+Example scan response (persisted):
+
+```json
+{
+        "components": [
+                {"name": "openssl", "version": "1.1.1d"}
+        ],
+        "vulnerabilities": [
+                {
+                        "cve_id": "CVE-2022-0778",
+                        "severity": "HIGH",
+                        "description": "Infinite loop in BN_mod_sqrt"
+                }
+        ],
+        "risk_score": "HIGH",
+        "report_id": 1
+}
 ```
 
 ---
@@ -258,7 +401,7 @@ pytest --cov
 
 ## Roadmap
 
-### Phase 1 — Foundation ✅
+### Phase 1 - Foundation ✅
 
 * Component detection
 * Version resolution
@@ -267,7 +410,7 @@ pytest --cov
 * CLI interface
 * HTML reporting
 
-### Phase 2 — Firmware Extraction
+### Phase 2 - Firmware Extraction
 
 ```text
 firmware.bin
@@ -282,13 +425,15 @@ firmware.bin
 * Filesystem extraction
 * Metadata discovery
 
-### Phase 3 — SBOM Generation
+### Phase 3 - SBOM Generation
 
-* SPDX
-* CycloneDX
-* License reporting
+* SPDX + CycloneDX generation
+* SQLite persistence for reports
+* ELF-assisted component identification
+* Firmware metadata extraction
+* Expanded API for upload and report retrieval
 
-### Phase 4 — Secret Discovery
+### Phase 4 - Secret Discovery
 
 Detect:
 
@@ -297,7 +442,7 @@ Detect:
 * Credentials
 * Certificates
 
-### Phase 5 — Firmware Diffing
+### Phase 5 - Firmware Diffing
 
 Compare releases:
 
@@ -314,7 +459,7 @@ Identify:
 * New vulnerabilities
 * Fixed vulnerabilities
 
-### Phase 6 — Security Platform
+### Phase 6 - Security Platform
 
 * Scan history
 * Dashboard
@@ -349,4 +494,14 @@ FLENS was created to explore the intersection of:
 * Modern Python Architecture
 
 The long-term vision is to evolve FLENS into a comprehensive firmware security platform capable of analyzing, comparing, and monitoring embedded software releases at scale.
+
+---
+
+## Methodology Documentation
+
+See:
+
+* docs/risk_scoring.md
+* docs/vulnerability_detection.md
+* docs/sbom.md
 

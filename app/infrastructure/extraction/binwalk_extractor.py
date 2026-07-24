@@ -40,6 +40,10 @@ class BinwalkExtractor(FirmwareExtractor):
         command = [
             "binwalk",
             "--extract",
+            # Debian's binwalk refuses to run its extraction helpers as root
+            # unless this is explicitly acknowledged. The FLENS Docker image
+            # intentionally runs the CLI as root, so pass the user explicitly.
+            "--run-as=root",
             "--directory",
             str(output_dir),
             str(firmware_path),

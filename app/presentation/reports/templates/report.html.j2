@@ -85,6 +85,23 @@
       font-style: italic;
     }
 
+    .note {
+      margin: 0.55rem 0;
+    }
+
+    .doc-list {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    .doc-list li {
+      margin: 0.35rem 0;
+    }
+
+    .mono {
+      font-family: "Consolas", "Courier New", monospace;
+    }
+
     @keyframes reveal {
       from {
         opacity: 0;
@@ -101,7 +118,6 @@
   <main class="container">
     <section class="hero">
       <h1>FLENS Firmware Security Report</h1>
-      <p>Phase 1 rootfs analysis output.</p>
       <div class="risk risk-{{ scan_result.risk_score.lower() }}">Risk Score: {{ scan_result.risk_score }}</div>
     </section>
 
@@ -143,6 +159,49 @@
       {% else %}
       <p class="empty">No matching CVEs found.</p>
       {% endif %}
+    </section>
+
+    <section class="panel">
+      <h2>Risk Score Breakdown</h2>
+      <p class="note">Critical Vulnerabilities: {{ risk_breakdown.critical }}</p>
+      <p class="note">High Vulnerabilities: {{ risk_breakdown.high }}</p>
+      <p class="note">Medium Vulnerabilities: {{ risk_breakdown.medium }}</p>
+      <p class="note">Low Vulnerabilities: {{ risk_breakdown.low }}</p>
+      <p class="note">Calculated Score: {{ risk_breakdown.total }}</p>
+      <p class="note"><strong>Overall Risk: {{ risk_breakdown.overall }}</strong></p>
+    </section>
+
+    <section class="panel">
+      <h2>Vulnerability Detection Explanation</h2>
+      <p class="note">FLENS identifies vulnerabilities through:</p>
+      <p class="note">1. Component detection</p>
+      <p class="note">2. Version identification</p>
+      <p class="note">3. Vulnerability database correlation</p>
+      <p class="note">FLENS detects known vulnerabilities based on available vulnerability intelligence.</p>
+      <p class="note">Absence of findings does not imply absence of vulnerabilities.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Transparency &amp; Methodology</h2>
+      <ul class="doc-list">
+        {% for item in methodology_links %}
+        <li>
+          {{ item.label }}:
+          {% if item.url %}
+          <a href="{{ item.url }}">{{ item.path }}</a>
+          {% else %}
+          <span class="mono">{{ item.path }}</span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Disclaimer</h2>
+      <p class="note">FLENS identifies known vulnerabilities and security indicators based on detected software components and available vulnerability intelligence.</p>
+      <p class="note">The absence of findings does not imply the absence of vulnerabilities.</p>
+      <p class="note">New, undisclosed, proprietary, or currently unknown vulnerabilities may not be detected.</p>
     </section>
   </main>
 </body>

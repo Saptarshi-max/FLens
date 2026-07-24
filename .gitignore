@@ -1,0 +1,62 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Build and packaging artifacts
+build/
+dist/
+site/
+*.egg-info/
+.eggs/
+*.egg
+pip-wheel-metadata/
+
+# Test, lint, and type-check caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+
+# Coverage outputs
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Generated reports and SBOM exports
+report.html
+firmware_report.html
+*.spdx.json
+*.cyclonedx.json
+output/
+
+# Local runtime and database artifacts
+*.db
+*.sqlite
+*.sqlite3
+sample_data/uploads/
+sample_data/extracted/
+sample_data/report.html
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

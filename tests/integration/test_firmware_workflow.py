@@ -3,12 +3,14 @@ from pathlib import Path
 
 from app.application.services.risk_engine import RiskEngine
 from app.application.use_cases.analyze_firmware import AnalyzeFirmwareUseCase
+from app.application.use_cases.generate_sbom import GenerateSBOMUseCase
 from app.application.use_cases.scan_firmware import ScanFirmwareUseCase
 from app.domain.entities.extraction_result import ExtractionResult
 from app.domain.interfaces.firmware_extractor import FirmwareExtractor
 from app.infrastructure.parsers.filesystem_component_detector import FileSystemComponentDetector
 from app.infrastructure.parsers.static_version_resolver import StaticVersionResolver
 from app.infrastructure.repositories.json_vulnerability_provider import JsonVulnerabilityProvider
+from app.infrastructure.sbom.json_sbom_generator import JsonSBOMGenerator
 from app.presentation.reports.html_report_generator import HtmlReportGenerator
 
 
@@ -55,3 +57,34 @@ def test_firmware_image_to_scan_to_report_workflow(tmp_path: Path) -> None:
     html = report_path.read_text(encoding="utf-8")
     assert "Risk Score" in html
     assert "CVE" in html
+
+    sbom_result = GenerateSBOMUseCase(JsonSBOMGenerator()).execute(result.scan_result)
+    assert sbom_result.spdx.content["spdxVersion"] == "SPDX-2.3"
+    assert sbom_result.cyclonedx.content["bomFormat"] == "CycloneDX"
+    assert any(package["name"] == "openssl" for package in sbom_result.spdx.content["packages"])
+
+
+def test_openwrt_firmware_fixture_detects_busybox(tmp_path: Path) -> None:
+    firmware_path = (
+        Path("sample_data")
+        / "openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade.bin"
+    )
+    extracted_root = Path("sample_data") / "rootfs"
+    fixture_db = Path("tests") / "fixtures" / "cve_db_test.json"
+
+    scan_use_case = ScanFirmwareUseCase(
+        component_detector=FileSystemComponentDetector(StaticVersionResolver()),
+        vulnerability_provider=JsonVulnerabilityProvider(fixture_db),
+        risk_engine=RiskEngine(),
+    )
+    workflow = AnalyzeFirmwareUseCase(
+        firmware_extractor=FakeFirmwareExtractor(extracted_root=extracted_root),
+        scan_use_case=scan_use_case,
+    )
+
+    result = workflow.execute(firmware_path)
+
+    names = {component.name for component in result.scan_result.components}
+    assert "busybox" in names
+    assert "openssl" in names
+    assert result.extraction_result.filesystem_type == "SquashFS"

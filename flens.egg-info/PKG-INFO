@@ -6,7 +6,10 @@ Requires-Python: >=3.12
 Description-Content-Type: text/markdown
 Requires-Dist: fastapi<1.0.0,>=0.116.0
 Requires-Dist: jinja2<4.0.0,>=3.1.4
+Requires-Dist: pyelftools<1.0.0,>=0.31
+Requires-Dist: python-multipart<1.0.0,>=0.0.20
 Requires-Dist: pydantic<3.0.0,>=2.9.0
+Requires-Dist: sqlalchemy<3.0.0,>=2.0.32
 Requires-Dist: typer<1.0.0,>=0.16.0
 Provides-Extra: dev
 Requires-Dist: mypy<2.0.0,>=1.11.0; extra == "dev"
@@ -14,21 +17,206 @@ Requires-Dist: pytest<9.0.0,>=8.3.0; extra == "dev"
 Requires-Dist: pytest-cov<6.0.0,>=5.0.0; extra == "dev"
 Requires-Dist: ruff<1.0.0,>=0.6.0; extra == "dev"
 
-# FLENS - Firmware Linux Embedded Security
+# FLENS
 
-FLENS is a firmware security analysis platform for embedded Linux environments. This repository contains **Phase 1 MVP**, focused on scanning an extracted root filesystem and producing actionable risk output.
+### Firmware Linux Embedded Security
 
-## Phase 1 Scope
+Flens can analyze embedded Linux firmware, identify software components, map known vulnerabilities, and generate actionable security reports.
 
-- Detect known components from a rootfs (busybox, openssl, dropbear)
-- Resolve versions via swappable version parser strategy
-- Match vulnerabilities from a JSON CVE provider
-- Calculate configurable overall risk score
-- Provide CLI scan command
-- Generate HTML reports with Jinja2
-- Expose a baseline FastAPI interface for future dashboard integration
+FLENS is a Python-based CLI firmware security analysis tool designed for embedded Linux systems such as routers, IoT gateways, industrial controllers, cameras, and edge devices.
 
-## Clean Architecture Layout
+The project aims to bring firmware security closer to embedded software development by combining component discovery, vulnerability identification, risk assessment, and reporting into an extensible engineering workflow.
+
+---
+
+## Why FLENS?
+
+
+Firmware often contains hundreds of third-party components:
+
+* OpenSSL
+* BusyBox
+* Dropbear
+* Curl
+* Nginx
+* Linux Kernel packages
+
+Many products ship with outdated or vulnerable versions of these components, creating hidden security risks.
+
+FLENS helps answer questions like:
+
+* What software exists inside this firmware?
+* Which versions are present?
+* Are any known vulnerabilities affecting them?
+* What is the overall risk profile?
+* How does one firmware release compare to another?
+
+## Where FLENS Fits
+
+Existing firmware analysis tools are excellent at extracting and inspecting firmware images. However, embedded teams often need more than a one-time security scan.
+
+FLENS focuses on the engineering workflow:
+
+- Integrating firmware security checks into development pipelines
+- Tracking component risks across firmware releases
+- Generating actionable reports for developers and reviewers
+- Providing an extensible foundation for SBOM, vulnerability management, and CI/CD security gates
+
+Instead of treating firmware analysis as a manual security exercise, FLENS aims to make it part of the embedded software lifecycle.
+
+Example workflow:
+
+```
+Yocto Build / Firmware Release
+│
+▼
+FLENS Analysis
+│
+▼
+Components + CVEs + Risk Score
+│
+▼
+Security Report / Release Decision
+
+```
+
+FLENS bridges the gap between **firmware reverse engineering tools** and **everyday embedded software engineering workflows**.
+
+---
+
+## Current Capabilities
+
+### Component Discovery
+
+Automatically identifies known software components inside an extracted firmware filesystem.
+
+Example:
+
+```text
+OpenSSL 1.1.1d
+BusyBox 1.31.1
+Dropbear 2020.79
+```
+
+### Vulnerability Mapping
+
+Correlates detected software versions against a vulnerability database.
+
+Example:
+
+```text
+OpenSSL 1.1.1d
+
+→ CVE-2022-0778
+→ CVE-2021-3711
+```
+
+### Risk Assessment
+
+Calculates an overall firmware security score using configurable severity weighting.
+
+Example:
+
+```text
+Risk Level: HIGH
+```
+
+### Report Generation
+
+Produces human-readable HTML reports suitable for audits, reviews, and release validation.
+
+Reports include:
+
+* Risk score breakdown
+* Vulnerability detection explanation
+* Transparency & methodology references
+* Security disclaimer
+
+### SBOM Generation
+
+Generates machine-readable SBOMs in both CycloneDX JSON and SPDX JSON formats for each scan.
+
+### Persistent Scan History
+
+Stores scan artifacts in SQLite for report retrieval and auditability:
+
+* Components
+* Vulnerabilities
+* Risk score
+* SBOM payloads
+* Firmware metadata
+
+### Firmware Metadata + ELF Intelligence
+
+Enhances detection with:
+
+* ELF architecture parsing
+* Binary string fingerprints for component identification fallback
+* Firmware kernel and vendor hints from extracted rootfs
+
+---
+
+## Example Scan
+
+Input:
+
+```text
+rootfs/
+├── bin/
+│   ├── busybox
+│   ├── openssl
+│   └── dropbear
+```
+
+Output:
+
+```text
+──────────────────────────
+FLENS Security Report
+──────────────────────────
+
+Detected Components
+
+• BusyBox 1.31.1
+• OpenSSL 1.1.1d
+• Dropbear 2020.79
+
+Detected Vulnerabilities
+
+• CVE-2022-0778 (HIGH)
+• CVE-2021-3711 (HIGH)
+
+Overall Risk
+
+HIGH
+```
+
+---
+
+## Architecture
+
+FLENS follows Clean Architecture principles to separate business logic from implementation details.
+
+```text
+Root Filesystem
+        │
+        ▼
+Component Detection
+        │
+        ▼
+Version Resolution
+        │
+        ▼
+Vulnerability Mapping
+        │
+        ▼
+Risk Assessment
+        │
+        ▼
+HTML Report / API Response
+```
+
+Project Structure:
 
 ```text
 flens/
@@ -44,22 +232,155 @@ flens/
 └── pyproject.toml
 ```
 
+---
+
+## Prerequisites
+
+Before running FLENS, make sure the following are in place:
+
+* Python 3.12+
+* The same virtual environment is used for install and runtime
+* Python dependencies installed with `pip install -e .[dev]`
+* For firmware image analysis, native extraction tools installed in the same shell/environment:
+        * `binwalk`
+        * `squashfs-tools`
+
+If you run `flens` from a different Python environment than the one used for installation, you can get missing-module errors or incomplete analysis. For firmware reports, that can also lead to misleading output, so it is better to stop and fix the environment first.
+
+Recommended Windows workflow:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+pip install -e .[dev]
+```
+
 ## Quick Start
 
-1. Create and activate a Python 3.12+ virtual environment.
-2. Install dependencies:
+Install:
 
 ```bash
 pip install -e .[dev]
 ```
 
-3. Run scan:
+Run a scan:
 
 ```bash
-flens scan sample_data/rootfs --report-out sample_data/report.html
+flens scan sample_data/rootfs
 ```
 
-4. Run quality gates:
+Generate an HTML report:
+
+```bash
+flens scan sample_data/rootfs \
+    --report-out report.html
+```
+
+Generate SBOM exports (SPDX + CycloneDX):
+
+```bash
+flens scan sample_data/rootfs \
+        --report-out output/report.html \
+        --sbom-out output
+```
+
+Analyze a firmware image directly:
+
+```bash
+flens firmware sample_data/firmware/sample_router.bin --report-out firmware_report.html
+```
+
+Analyze firmware image and export SBOMs:
+
+```bash
+flens firmware sample_data/firmware/sample_router.bin \
+        --report-out output/report.html \
+        --sbom-out output
+```
+
+Generated files:
+
+```text
+output/
+├── report.html
+├── report.spdx.json
+└── report.cyclonedx.json
+```
+
+Optional: set FLENS_REPOSITORY_URL to render clickable methodology links in HTML reports.
+
+Example:
+
+```bash
+set FLENS_REPOSITORY_URL=https://github.com/example/flens
+```
+
+---
+
+## API
+
+Run locally:
+
+```bash
+uvicorn app.presentation.api.main:api --reload
+```
+
+Open:
+
+```text
+http://localhost:8000/docs
+```
+
+Available endpoints:
+
+```http
+GET  /health
+POST /scan
+POST /firmware/upload
+GET  /reports/{report_id}
+```
+
+Example scan request:
+
+```json
+{
+        "rootfs_path": "sample_data/rootfs"
+}
+```
+
+Example scan response (persisted):
+
+```json
+{
+        "components": [
+                {"name": "openssl", "version": "1.1.1d"}
+        ],
+        "vulnerabilities": [
+                {
+                        "cve_id": "CVE-2022-0778",
+                        "severity": "HIGH",
+                        "description": "Infinite loop in BN_mod_sqrt"
+                }
+        ],
+        "risk_score": "HIGH",
+        "report_id": 1
+}
+```
+
+---
+
+## Quality Standards
+
+FLENS includes:
+
+* Type hints
+* Dependency injection
+* Unit tests
+* Integration tests
+* Static analysis
+* HTML reporting
+* CI-ready structure
+
+Validation:
 
 ```bash
 ruff check .
@@ -68,52 +389,111 @@ pytest -v
 pytest --cov
 ```
 
-## CLI Usage
+---
 
-```bash
-flens scan <rootfs_path> [--report-out report.html]
+## Roadmap
+
+### Phase 1 — Foundation ✅
+
+* Component detection
+* Version resolution
+* CVE matching
+* Risk scoring
+* CLI interface
+* HTML reporting
+
+### Phase 2 — Firmware Extraction
+
+```text
+firmware.bin
+      │
+      ▼
+    Binwalk
+      ▼
+    rootfs
 ```
 
-Outputs:
-- Detected components
-- Matched vulnerabilities
-- Final risk score
-- Optional HTML report file
+* Direct firmware analysis
+* Filesystem extraction
+* Metadata discovery
 
-## FastAPI Usage
+### Phase 3 — SBOM Generation
 
-Start a local API server:
+* SPDX + CycloneDX generation
+* SQLite persistence for reports
+* ELF-assisted component identification
+* Firmware metadata extraction
+* Expanded API for upload and report retrieval
 
-```bash
-uvicorn app.presentation.api.main:api --reload
+### Phase 4 — Secret Discovery
+
+Detect:
+
+* Private keys
+* API keys
+* Credentials
+* Certificates
+
+### Phase 5 — Firmware Diffing
+
+Compare releases:
+
+```text
+Firmware A
+     vs
+Firmware B
 ```
 
-Endpoints:
-- `GET /health`
-- `POST /scan`
+Identify:
 
-Example payload:
+* Added packages
+* Removed packages
+* New vulnerabilities
+* Fixed vulnerabilities
 
-```json
-{
-  "rootfs_path": "sample_data/rootfs"
-}
-```
+### Phase 6 — Security Platform
 
-## Extensibility Contracts Ready for Future Phases
+* Scan history
+* Dashboard
+* Multi-user support
+* Automated analysis pipelines
 
-The domain layer already defines stable interfaces for:
-- Firmware extraction
-- SBOM generation
-- Secret scanning
-- Firmware comparison
-- CVE feed refresh providers
+---
 
-This allows Phase 2+ capability additions without modifying core use-case orchestration.
+## Technology Stack
 
-## Documentation
+* Python 3.12+
+* FastAPI
+* Pydantic
+* Typer
+* Jinja2
+* Pytest
+* Ruff
+* MyPy
 
-- Architecture: `docs/architecture.md`
-- Development guide: `docs/development.md`
-- Roadmap: `docs/roadmap.md`
-- Example report: `docs/example_report.html`
+---
+
+## Motivation
+
+FLENS is designed for engineers building embedded Linux products who need visibility into the security posture of their firmware before deployment.
+
+FLENS was created to explore the intersection of:
+
+* Embedded Linux
+* Firmware Analysis
+* Software Supply Chain Security
+* Vulnerability Management
+* Modern Python Architecture
+
+The long-term vision is to evolve FLENS into a comprehensive firmware security platform capable of analyzing, comparing, and monitoring embedded software releases at scale.
+
+---
+
+## Methodology Documentation
+
+See:
+
+* docs/risk_scoring.md
+* docs/vulnerability_detection.md
+* docs/sbom.md
+
