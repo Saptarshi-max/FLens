@@ -31,20 +31,20 @@ pip-wheel-metadata/
 htmlcov/
 coverage.xml
 
-# Generated reports and SBOM exports
-report.html
-firmware_report.html
+# Generated FLENS scan artifacts
+# Keep report templates, documentation, and README screenshots under version control.
+/*.html
+/output/
+/sample_data/*.html
+sample_data/uploads/
+sample_data/extracted/
 *.spdx.json
 *.cyclonedx.json
-output/
 
 # Local runtime and database artifacts
 *.db
 *.sqlite
 *.sqlite3
-sample_data/uploads/
-sample_data/extracted/
-sample_data/report.html
 
 # Logs and temporary files
 *.log
