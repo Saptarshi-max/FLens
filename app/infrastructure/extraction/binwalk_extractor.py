@@ -1,4 +1,5 @@
 import logging
+import re
 import shutil
 import subprocess
 import tempfile
@@ -9,6 +10,7 @@ from app.domain.entities.extraction_result import ExtractionResult
 from app.domain.interfaces.firmware_extractor import FirmwareExtractor
 from app.infrastructure.extraction.errors import ExtractionError
 from app.infrastructure.extraction.filesystem_detector import FilesystemDetector
+from app.infrastructure.extraction.squashfs_strategy import SquashfsStrategy
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +27,12 @@ class BinwalkExtractor(FirmwareExtractor):
         filesystem_detector: FilesystemDetector | None = None,
         run_command: RunCommand | None = None,
         work_dir: Path | None = None,
+        squashfs_strategy: SquashfsStrategy | None = None,
     ) -> None:
         self._filesystem_detector = filesystem_detector or FilesystemDetector()
         self._run_command = run_command or self._default_run_command
         self._work_dir = work_dir
+        self._squashfs_strategy = squashfs_strategy or SquashfsStrategy()
 
     def extract(self, firmware_path: Path) -> ExtractionResult:
         self._validate_input(firmware_path)
@@ -50,13 +54,31 @@ class BinwalkExtractor(FirmwareExtractor):
         ]
 
         logger.info("Starting firmware extraction")
-        completed = self._run_command(command)
+        try:
+            completed = self._run_command(command)
+        except FileNotFoundError as exc:
+            raise ExtractionError(
+                "Binwalk is present on PATH but could not be launched. "
+                "Verify the binwalk installation and its Python/runtime dependencies."
+            ) from exc
         if completed.returncode != 0:
             stderr = completed.stderr.strip() or "No error details provided by binwalk."
             raise ExtractionError(f"Binwalk extraction failed. {stderr}")
 
         root_search = self._locate_extracted_root(output_dir)
         rootfs_path = self._filesystem_detector.find_rootfs(root_search)
+        legacy_metadata: dict[str, str] = {}
+        if rootfs_path is None:
+            offset, version = self._squashfs_details(completed.stdout)
+            if offset is not None:
+                legacy = self._squashfs_strategy.extract(firmware_path, offset, output_dir)
+                rootfs_path = legacy.rootfs_path
+                legacy_metadata = {
+                    "extractor": legacy.extractor,
+                    "squashfs_offset": f"0x{offset:X}",
+                    "squashfs_version": version or "Unknown",
+                    "warnings": "; ".join(legacy.warnings),
+                }
         if rootfs_path is None:
             raise ExtractionError("Empty extraction result.")
 
@@ -73,6 +95,7 @@ class BinwalkExtractor(FirmwareExtractor):
                 "backend": "binwalk",
                 "command": " ".join(command),
                 "stdout": completed.stdout.strip(),
+                **legacy_metadata,
             },
         )
 
@@ -104,6 +127,13 @@ class BinwalkExtractor(FirmwareExtractor):
         if suffix not in self._supported_suffixes:
             supported = ", ".join(sorted(self._supported_suffixes))
             raise ExtractionError(f"Unsupported format: {suffix}. Supported formats: {supported}")
+
+    @staticmethod
+    def _squashfs_details(stdout: str) -> tuple[int | None, str | None]:
+        match = re.search(
+            r"^(\d+).*Squashfs filesystem.*version\s+([\d.]+)", stdout, re.MULTILINE | re.IGNORECASE
+        )
+        return (int(match.group(1)), match.group(2)) if match else (None, None)
 
     @staticmethod
     def _default_run_command(command: list[str]) -> subprocess.CompletedProcess[str]:

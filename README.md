@@ -1,10 +1,25 @@
 # FLENS
 
+<!-- FIRMWARE_VALIDATION_START -->
+
+## Firmware Validation Matrix
+
+| Project / Vendor | Device / Target | Firmware Version | Image File | SHA-256 | FLENS Report | Status |
+|---|---|---|---|---|---|---|
+| OpenWrt | ALFA Network AP96 | 19.07.10 | `Unknown` | `Unknown` | _Pending_ | 🖐 manual_download_required |
+| TP-Link | TL-WA701ND | 140324 | `Unknown` | `Unknown` | _Pending_ | 🖐 manual_download_required |
+| DD-WRT | Netgear R7000 | r63485 | `Unknown` | `Unknown` | _Pending_ | 🖐 manual_download_required |
+| FreshTomato | Netgear R7000 | Unknown | `Unknown` | `Unknown` | _Pending_ | 🖐 manual_download_required |
+
+<!-- FIRMWARE_VALIDATION_END -->
+
 ![flens-logo](/flens.jpeg)
 
 Flens can analyze embedded Linux firmware, identify software components, map known vulnerabilities, and generate actionable security reports.
 
 FLENS is a Python-based CLI firmware security analysis tool designed for embedded Linux systems such as routers, IoT gateways, industrial controllers, cameras, and edge devices.
+
+FLENS inventories installed software from package metadata and binary analysis, resolves CPE identifiers, performs evidence-backed version-range correlation through pluggable offline vulnerability feeds, and produces transparent reports and SBOMs.
 
 The project aims to bring firmware security closer to embedded software development by combining component discovery, vulnerability identification, risk assessment, and reporting into an extensible engineering workflow.
 
@@ -71,6 +86,11 @@ FLENS bridges the gap between **firmware reverse engineering tools** and **every
 
 Automatically identifies known software components inside an extracted firmware filesystem.
 
+FLENS records the evidence used for each inventory entry. Versions are resolved only from
+installed package databases (`opkg`, `dpkg`, or `apk`) or version banners embedded in
+binaries. When no version can be verified, the component is reported as `Unknown`; FLENS
+does not infer a version from its filename.
+
 Example:
 
 ```text
@@ -82,6 +102,9 @@ Dropbear 2020.79
 ### Vulnerability Mapping
 
 Correlates detected software versions against a vulnerability database.
+
+Each vulnerability match retains the component/version evidence and the vulnerability-source
+record used for the correlation. Components with an `Unknown` version are not matched.
 
 Example:
 
@@ -225,6 +248,7 @@ Before running FLENS, make sure the following are in place:
 * For firmware image analysis, native extraction tools installed in the same shell/environment:
         * `binwalk`
         * `squashfs-tools`
+        * `sasquatch` for legacy/vendor-modified SquashFS (included in the Docker image)
 
 If you run `flens` from a different Python environment than the one used for installation, you can get missing-module errors or incomplete analysis. For firmware reports, that can also lead to misleading output, so it is better to stop and fix the environment first.
 
@@ -245,6 +269,24 @@ pip install -e .[dev]
 | A firmware image, such as `.bin`, `.img`, or `.trx` | `flens firmware <firmware-path>` | Recommended on Windows or when `binwalk` and `squashfs-tools` are not installed locally. |
 
 `flens scan` does not extract firmware. Passing a `.bin` file to it will not find components because it expects a directory of extracted files. Use `flens firmware` for the image first.
+
+### Firmware Analysis with Docker
+
+On Windows, or whenever `binwalk` and `squashfs-tools` are unavailable locally, build the included image from the repository root:
+
+```powershell
+docker build -t flens:local .
+```
+
+Then mount the repository and write the report to a path inside that mount. For example, to analyze the included OpenWrt image:
+
+```powershell
+docker run --rm -v "${PWD}:/workspace" flens:local firmware `
+    /workspace/sample_data/openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade.bin `
+    --report-out /workspace/docs/openwrt-report.html
+```
+
+The generated `docs/openwrt-report.html` remains in the local repository because `/workspace` is mounted from the host.
 
 Navigate the CLI with:
 
@@ -504,4 +546,5 @@ See:
 * docs/risk_scoring.md
 * docs/vulnerability_detection.md
 * docs/sbom.md
+* docs/legacy_squashfs.md
 

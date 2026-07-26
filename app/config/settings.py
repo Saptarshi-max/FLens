@@ -13,6 +13,9 @@ class AppSettings:
     extraction_work_dir: Path
     database_path: Path
     upload_work_dir: Path
+    feeds: tuple[str, ...] = ("json",)
+    offline_mode: bool = True
+    feed_refresh_interval: int = 86400
 
 
 def default_settings() -> AppSettings:
@@ -25,4 +28,9 @@ def default_settings() -> AppSettings:
         extraction_work_dir=project_root / "sample_data" / "extracted",
         database_path=project_root / "flens.db",
         upload_work_dir=project_root / "sample_data" / "uploads",
+        feeds=tuple(
+            item.strip() for item in os.getenv("FLENS_FEEDS", "json").split(",") if item.strip()
+        ),
+        offline_mode=os.getenv("FLENS_OFFLINE_MODE", "true").lower() != "false",
+        feed_refresh_interval=int(os.getenv("FLENS_FEED_REFRESH_INTERVAL", "86400")),
     )

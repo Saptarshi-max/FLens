@@ -5,3 +5,9 @@ __pycache__/
 .ruff_cache/
 .git/
 .coverage
+
+# Extraction outputs can contain Linux symlinks that Windows cannot read.
+# They are runtime artifacts and must never be copied into the image.
+sample_data/extracted/
+sample_data/uploads/
+flens.db

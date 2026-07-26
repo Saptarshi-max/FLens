@@ -80,6 +80,22 @@ def test_binwalk_missing_installation(tmp_path: Path, monkeypatch: pytest.Monkey
         extractor.extract(firmware)
 
 
+def test_binwalk_launch_failure_is_reported_cleanly(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    firmware = tmp_path / "firmware.bin"
+    firmware.write_bytes(b"test")
+    monkeypatch.setattr(BINWALK_WHICH_TARGET, lambda _: "binwalk")
+
+    def missing_command(_: list[str]) -> subprocess.CompletedProcess[str]:
+        raise FileNotFoundError()
+
+    extractor = BinwalkExtractor(run_command=missing_command, work_dir=tmp_path / "work")
+
+    with pytest.raises(ExtractionError, match="could not be launched"):
+        extractor.extract(firmware)
+
+
 def test_binwalk_unsupported_format(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     firmware = tmp_path / "firmware.zip"
     firmware.write_bytes(b"test")

@@ -60,3 +60,11 @@ sample_data/extracted/
 Thumbs.db
 .vscode/
 .idea/
+sample_data/firmware/**/*.bin
+sample_data/firmware/**/*.img
+sample_data/firmware/**/*.trx
+sample_data/firmware/**/*.chk
+sample_data/firmware/**/*.ubi
+sample_data/firmware/**/*.itb
+sample_data/firmware-inbox/*
+output/scan-logs/

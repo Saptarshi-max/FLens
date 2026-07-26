@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FLENS Scan Report</title>
+  <style>
+    :root {
+      --bg: #f7f4ef;
+      --panel: #ffffff;
+      --ink: #1f2a37;
+      --muted: #5b6470;
+      --accent: #0f766e;
+      --danger: #b91c1c;
+      --warn: #b45309;
+      --ok: #166534;
+      --border: #d8d0c5;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Source Sans 3", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top right, #e6f7f5, var(--bg) 55%);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ecfeff, #fefce8);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+      animation: reveal 360ms ease-out;
+    }
+
+    h1, h2 {
+      margin: 0 0 0.65rem;
+      font-family: "Merriweather", Georgia, serif;
+    }
+
+    .risk {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-top: 0.75rem;
+    }
+
+    .risk-low { color: var(--ok); }
+    .risk-medium { color: var(--warn); }
+    .risk-high, .risk-critical { color: var(--danger); }
+
+    .panel {
+      margin-top: 1rem;
+      background: var(--panel);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 1rem 1.2rem;
+      animation: reveal 460ms ease-out;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.55rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .note {
+      margin: 0.55rem 0;
+    }
+
+    .doc-list {
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    .doc-list li {
+      margin: 0.35rem 0;
+    }
+
+    .mono {
+      font-family: "Consolas", "Courier New", monospace;
+    }
+
+    @keyframes reveal {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="hero">
+      <h1>FLENS Firmware Security Report</h1>
+      <div class="risk risk-low">Risk Score: LOW</div>
+    </section>
+
+    <section class="panel">
+      <h2>Detected Components</h2>
+      
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Version</th><th>CPE</th><th>Confidence</th><th>Evidence</th></tr>
+        </thead>
+        <tbody>
+        
+          <tr><td>busybox</td><td>1.30.1-6</td><td>cpe:2.3:a:busybox:busybox</td><td>HIGH</td><td><div><span class="mono">opkg</span>: Package: busybox; Version: 1.30.1-6 <span class="mono">(sample_data\extracted\openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade_extract\_openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade.bin.extracted\squashfs-root\usr\lib\opkg\status)</span></div></td></tr>
+        
+          <tr><td>dropbear</td><td>2019.78-2</td><td>cpe:2.3:a:dropbear_ssh_project:dropbear_ssh</td><td>HIGH</td><td><div><span class="mono">opkg</span>: Package: dropbear; Version: 2019.78-2 <span class="mono">(sample_data\extracted\openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade_extract\_openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade.bin.extracted\squashfs-root\usr\lib\opkg\status)</span></div></td></tr>
+        
+        </tbody>
+      </table>
+      
+    </section>
+
+    <section class="panel">
+      <h2>Vulnerabilities</h2>
+      
+      <p class="empty">No matching CVEs found.</p>
+      
+    </section>
+
+    <section class="panel">
+      <h2>Risk Score Breakdown</h2>
+      <p class="note">Critical Vulnerabilities: 0</p>
+      <p class="note">High Vulnerabilities: 0</p>
+      <p class="note">Medium Vulnerabilities: 0</p>
+      <p class="note">Low Vulnerabilities: 0</p>
+      <p class="note">Calculated Score: 0</p>
+      <p class="note"><strong>Overall Risk: LOW</strong></p>
+    </section>
+
+    <section class="panel">
+      <h2>Vulnerability Detection Explanation</h2>
+      <p class="note">FLENS identifies vulnerabilities through:</p>
+      <p class="note">1. Component detection</p>
+      <p class="note">2. Version identification</p>
+      <p class="note">3. Vulnerability database correlation</p>
+      <p class="note">FLENS detects known vulnerabilities based on available vulnerability intelligence.</p>
+      <p class="note">Absence of findings does not imply absence of vulnerabilities.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Transparency &amp; Methodology</h2>
+      <ul class="doc-list">
+        
+        <li>
+          Risk scoring methodology:
+          
+          <span class="mono">docs/risk_scoring.md</span>
+          
+        </li>
+        
+        <li>
+          Vulnerability detection methodology:
+          
+          <span class="mono">docs/vulnerability_detection.md</span>
+          
+        </li>
+        
+        <li>
+          SBOM methodology:
+          
+          <span class="mono">docs/sbom.md</span>
+          
+        </li>
+        
+      </ul>
+    </section>
+
+    <section class="panel">
+      <h2>Disclaimer</h2>
+      <p class="note">FLENS identifies known vulnerabilities and security indicators based on detected software components and available vulnerability intelligence.</p>
+      <p class="note">The absence of findings does not imply the absence of vulnerabilities.</p>
+      <p class="note">New, undisclosed, proprietary, or currently unknown vulnerabilities may not be detected.</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -44,8 +44,7 @@ def _print_scan(scan_result: ScanResult) -> None:
     typer.echo("\nVulnerabilities:")
     for vulnerability in scan_result.vulnerabilities:
         typer.echo(
-            f"- {vulnerability.cve_id} "
-            f"[{vulnerability.severity}] {vulnerability.description}"
+            f"- {vulnerability.cve_id} [{vulnerability.severity}] {vulnerability.description}"
         )
 
     typer.echo(f"\nRisk Score: {scan_result.risk_score}")

@@ -46,6 +46,8 @@ class ComponentRecord(Base):
     scan_id: Mapped[int] = mapped_column(ForeignKey("scan.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     version: Mapped[str] = mapped_column(String(64), nullable=False)
+    confidence: Mapped[str] = mapped_column(String(16), nullable=False, default="LOW")
+    evidence: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
 
     scan: Mapped[ScanRecord] = relationship(back_populates="components")
 
@@ -58,6 +60,10 @@ class VulnerabilityRecord(Base):
     cve_id: Mapped[str] = mapped_column(String(64), nullable=False)
     severity: Mapped[str] = mapped_column(String(32), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    component_name: Mapped[str] = mapped_column(String(255), nullable=False, default="Unknown")
+    component_version: Mapped[str] = mapped_column(String(64), nullable=False, default="Unknown")
+    confidence: Mapped[str] = mapped_column(String(16), nullable=False, default="LOW")
+    evidence: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
 
     scan: Mapped[ScanRecord] = relationship(back_populates="vulnerabilities")
 

@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.domain.entities.component import Component
+from app.domain.entities.evidence import Evidence
 from app.domain.entities.extraction_result import ExtractionResult
 from app.domain.entities.scan_result import ScanResult
 from app.domain.entities.vulnerability import Vulnerability
@@ -62,6 +63,8 @@ class SQLAlchemyScanRepository(ScanRepository):
                         scan_id=scan.id,
                         name=component.name,
                         version=component.version,
+                        confidence=component.confidence,
+                        evidence=self._serialize_evidence(component.evidence),
                     )
                 )
 
@@ -72,6 +75,10 @@ class SQLAlchemyScanRepository(ScanRepository):
                         cve_id=vulnerability.cve_id,
                         severity=vulnerability.severity,
                         description=vulnerability.description,
+                        component_name=vulnerability.component_name,
+                        component_version=vulnerability.component_version,
+                        confidence=vulnerability.confidence,
+                        evidence=self._serialize_evidence(vulnerability.evidence),
                     )
                 )
 
@@ -94,7 +101,12 @@ class SQLAlchemyScanRepository(ScanRepository):
                 return None
 
             components = tuple(
-                Component(name=row.name, version=row.version)
+                Component(
+                    name=row.name,
+                    version=row.version,
+                    confidence=row.confidence,
+                    evidence=self._deserialize_evidence(row.evidence),
+                )
                 for row in session.scalars(
                     select(ComponentRecord).where(ComponentRecord.scan_id == scan.id)
                 )
@@ -104,6 +116,10 @@ class SQLAlchemyScanRepository(ScanRepository):
                     cve_id=row.cve_id,
                     severity=row.severity,
                     description=row.description,
+                    component_name=row.component_name,
+                    component_version=row.component_version,
+                    confidence=row.confidence,
+                    evidence=self._deserialize_evidence(row.evidence),
                 )
                 for row in session.scalars(
                     select(VulnerabilityRecord).where(VulnerabilityRecord.scan_id == scan.id)
@@ -159,3 +175,17 @@ class SQLAlchemyScanRepository(ScanRepository):
             format = SBOMFormat.SPDX_JSON
 
         return SBOMDocument(format=format, components=components, content=payload)
+
+    @staticmethod
+    def _serialize_evidence(evidence: tuple[Evidence, ...]) -> str:
+        return json.dumps(
+            [{"source": item.source, "path": item.path, "detail": item.detail} for item in evidence]
+        )
+
+    @staticmethod
+    def _deserialize_evidence(payload: str) -> tuple[Evidence, ...]:
+        try:
+            values = json.loads(payload)
+        except json.JSONDecodeError:
+            return ()
+        return tuple(Evidence(value["source"], value["path"], value["detail"]) for value in values)

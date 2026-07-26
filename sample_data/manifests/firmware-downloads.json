@@ -1,0 +1,38 @@
+[
+  {
+    "error": null,
+    "final_url": null,
+    "id": "openwrt-ap96-19.07.10",
+    "manual_download_instructions": "Download only from https://downloads.openwrt.org/releases/19.07.10/targets/ar71xx/generic/ and place the archive/image in sample_data/firmware-inbox/.",
+    "requested_url": null,
+    "source_page": "https://downloads.openwrt.org/releases/19.07.10/targets/ar71xx/generic/",
+    "status": "manual_download_required"
+  },
+  {
+    "error": null,
+    "final_url": null,
+    "id": "tplink-wa701nd-v2-140324",
+    "manual_download_instructions": "Download only from https://www.tp-link.com/us/support/download/tl-wa701nd/ and place the archive/image in sample_data/firmware-inbox/.",
+    "requested_url": null,
+    "source_page": "https://www.tp-link.com/us/support/download/tl-wa701nd/",
+    "status": "manual_download_required"
+  },
+  {
+    "error": null,
+    "final_url": null,
+    "id": "ddwrt-r7000-r63485",
+    "manual_download_instructions": "Download only from https://download1.dd-wrt.com/dd-wrtv2/downloads/betas/2026/01-25-2026-r63485/netgear-r7000/ and place the archive/image in sample_data/firmware-inbox/.",
+    "requested_url": null,
+    "source_page": "https://download1.dd-wrt.com/dd-wrtv2/downloads/betas/2026/01-25-2026-r63485/netgear-r7000/",
+    "status": "manual_download_required"
+  },
+  {
+    "error": null,
+    "final_url": null,
+    "id": "freshtomato-r7000",
+    "manual_download_instructions": "Download only from https://freshtomato.org/downloads/ and place the archive/image in sample_data/firmware-inbox/.",
+    "requested_url": null,
+    "source_page": "https://freshtomato.org/downloads/",
+    "status": "manual_download_required"
+  }
+]

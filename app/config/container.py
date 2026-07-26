@@ -17,9 +17,12 @@ from app.infrastructure.extraction.firmware_metadata_extractor import (
 from app.infrastructure.parsers.filesystem_component_detector import (
     FileSystemComponentDetector,
 )
-from app.infrastructure.parsers.static_version_resolver import StaticVersionResolver
+from app.infrastructure.parsers.firmware_version_resolver import FirmwareVersionResolver
 from app.infrastructure.repositories.json_vulnerability_provider import (
+    JsonVulnerabilityFeed,
     JsonVulnerabilityProvider,
+    NvdVulnerabilityFeed,
+    OsvVulnerabilityFeed,
 )
 from app.infrastructure.sbom.json_sbom_generator import JsonSBOMGenerator
 from app.presentation.reports.html_report_generator import HtmlReportGenerator
@@ -32,9 +35,19 @@ class Container:
         self.settings = settings or default_settings()
 
     def build_scan_use_case(self) -> ScanFirmwareUseCase:
-        version_resolver = StaticVersionResolver()
+        version_resolver = FirmwareVersionResolver()
         detector = FileSystemComponentDetector(version_resolver, elf_analyzer=ELFAnalyzer())
-        vulnerability_provider = JsonVulnerabilityProvider(self.settings.cve_database_path)
+        feed_types = {
+            "json": JsonVulnerabilityFeed,
+            "nvd": NvdVulnerabilityFeed,
+            "osv": OsvVulnerabilityFeed,
+        }
+        feeds = tuple(
+            feed_types[name](self.settings.cve_database_path)
+            for name in self.settings.feeds
+            if name in feed_types
+        )
+        vulnerability_provider = JsonVulnerabilityProvider(self.settings.cve_database_path, feeds)
         risk_engine = RiskEngine()
         return ScanFirmwareUseCase(detector, vulnerability_provider, risk_engine)
 

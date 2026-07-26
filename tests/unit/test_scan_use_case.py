@@ -5,7 +5,7 @@ from app.application.use_cases.scan_firmware import ScanFirmwareUseCase
 from app.infrastructure.parsers.filesystem_component_detector import (
     FileSystemComponentDetector,
 )
-from app.infrastructure.parsers.static_version_resolver import StaticVersionResolver
+from app.infrastructure.parsers.firmware_version_resolver import FirmwareVersionResolver
 from app.infrastructure.repositories.json_vulnerability_provider import JsonVulnerabilityProvider
 
 FIXTURE_DB = Path(__file__).resolve().parents[1] / "fixtures" / "cve_db_test.json"
@@ -13,10 +13,10 @@ FIXTURE_DB = Path(__file__).resolve().parents[1] / "fixtures" / "cve_db_test.jso
 
 def test_successful_scan(tmp_path: Path) -> None:
     (tmp_path / "bin").mkdir(parents=True)
-    (tmp_path / "bin" / "openssl").write_text("x", encoding="utf-8")
+    (tmp_path / "bin" / "openssl").write_text("OpenSSL 1.1.1d", encoding="utf-8")
 
     use_case = ScanFirmwareUseCase(
-        component_detector=FileSystemComponentDetector(StaticVersionResolver()),
+        component_detector=FileSystemComponentDetector(FirmwareVersionResolver()),
         vulnerability_provider=JsonVulnerabilityProvider(FIXTURE_DB),
         risk_engine=RiskEngine(),
     )
@@ -31,7 +31,7 @@ def test_successful_scan(tmp_path: Path) -> None:
 
 def test_empty_rootfs(tmp_path: Path) -> None:
     use_case = ScanFirmwareUseCase(
-        component_detector=FileSystemComponentDetector(StaticVersionResolver()),
+        component_detector=FileSystemComponentDetector(FirmwareVersionResolver()),
         vulnerability_provider=JsonVulnerabilityProvider(FIXTURE_DB),
         risk_engine=RiskEngine(),
     )

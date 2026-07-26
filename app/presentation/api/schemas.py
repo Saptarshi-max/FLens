@@ -4,12 +4,26 @@ from pydantic import BaseModel
 class ComponentSchema(BaseModel):
     name: str
     version: str
+    confidence: str
+    evidence: list[dict[str, str]]
+    cpe: str | None = None
+    cpe_candidates: list[str] = []
+    cpe_confidence: str = "LOW"
 
 
 class VulnerabilitySchema(BaseModel):
     cve_id: str
     severity: str
     description: str
+    component_name: str
+    component_version: str
+    confidence: str
+    evidence: list[dict[str, str]]
+    cvss: float | None = None
+    affected_range: str = "Unknown"
+    match_result: str = "Unknown"
+    data_source: str = "Unknown"
+    reasoning: str = "Unknown"
 
 
 class FirmwareMetadataSchema(BaseModel):

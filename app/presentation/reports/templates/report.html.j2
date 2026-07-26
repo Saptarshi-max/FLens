@@ -126,11 +126,11 @@
       {% if scan_result.components %}
       <table>
         <thead>
-          <tr><th>Name</th><th>Version</th></tr>
+          <tr><th>Name</th><th>Version</th><th>CPE</th><th>Confidence</th><th>Evidence</th></tr>
         </thead>
         <tbody>
         {% for component in scan_result.components %}
-          <tr><td>{{ component.name }}</td><td>{{ component.version }}</td></tr>
+          <tr><td>{{ component.name }}</td><td>{{ component.version }}</td><td>{{ component.cpe or 'Unresolved' }}</td><td>{{ component.confidence }}</td><td>{% for item in component.evidence %}<div><span class="mono">{{ item.source }}</span>: {{ item.detail }} <span class="mono">({{ item.path }})</span></div>{% else %}No version evidence available.{% endfor %}</td></tr>
         {% endfor %}
         </tbody>
       </table>
@@ -144,14 +144,17 @@
       {% if scan_result.vulnerabilities %}
       <table>
         <thead>
-          <tr><th>CVE</th><th>Severity</th><th>Description</th></tr>
+          <tr><th>CVE</th><th>Severity</th><th>Range / Match</th><th>Source</th><th>Description</th><th>Evidence</th></tr>
         </thead>
         <tbody>
         {% for vulnerability in scan_result.vulnerabilities %}
           <tr>
             <td>{{ vulnerability.cve_id }}</td>
             <td>{{ vulnerability.severity }}</td>
+            <td>{{ vulnerability.affected_range }} / {{ vulnerability.match_result }}</td>
+            <td>{{ vulnerability.data_source }}</td>
             <td>{{ vulnerability.description }}</td>
+            <td>{% for item in vulnerability.evidence %}<div><span class="mono">{{ item.source }}</span>: {{ item.detail }}</div>{% else %}No evidence available.{% endfor %}</td>
           </tr>
         {% endfor %}
         </tbody>

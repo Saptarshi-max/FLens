@@ -11,7 +11,7 @@ from .future_interfaces import (
 from .report_generator import ReportGenerator
 from .sbom_generator import SBOMGenerator
 from .scan_repository import ScanRepository
-from .version_resolver import VersionResolver
+from .version_resolver import VersionResolution, VersionResolver
 from .vulnerability_provider import VulnerabilityProvider
 
 __all__ = [
@@ -19,6 +19,7 @@ __all__ = [
     "FirmwareExtractor",
     "FirmwareMetadataExtractor",
     "VersionResolver",
+    "VersionResolution",
     "VulnerabilityProvider",
     "ReportGenerator",
     "ScanRepository",

@@ -4,7 +4,9 @@ from typing import Annotated
 from fastapi import FastAPI, File, HTTPException, UploadFile
 
 from app.config.container import Container
+from app.domain.entities.component import Component
 from app.domain.entities.extraction_result import ExtractionResult
+from app.domain.entities.vulnerability import Vulnerability
 from app.domain.sbom.models import SBOMDocument
 from app.presentation.api.schemas import (
     ComponentSchema,
@@ -45,15 +47,8 @@ def scan_firmware(payload: ScanRequestSchema) -> ScanResponseSchema:
     )
 
     return ScanResponseSchema(
-        components=[ComponentSchema(name=c.name, version=c.version) for c in result.components],
-        vulnerabilities=[
-            VulnerabilitySchema(
-                cve_id=v.cve_id,
-                severity=v.severity,
-                description=v.description,
-            )
-            for v in result.vulnerabilities
-        ],
+        components=[_component_to_schema(c) for c in result.components],
+        vulnerabilities=[_vulnerability_to_schema(v) for v in result.vulnerabilities],
         risk_score=result.risk_score,
         report_id=report_id,
     )
@@ -89,11 +84,8 @@ def get_report(report_id: int) -> ReportResponseSchema:
     return ReportResponseSchema(
         report_id=report.report_id,
         risk_score=report.risk_score,
-        components=[ComponentSchema(name=c.name, version=c.version) for c in report.components],
-        vulnerabilities=[
-            VulnerabilitySchema(cve_id=v.cve_id, severity=v.severity, description=v.description)
-            for v in report.vulnerabilities
-        ],
+        components=[_component_to_schema(c) for c in report.components],
+        vulnerabilities=[_vulnerability_to_schema(v) for v in report.vulnerabilities],
         sboms=[_sbom_to_schema(sbom) for sbom in report.sboms],
         firmware_metadata=(
             FirmwareMetadataSchema(
@@ -110,3 +102,38 @@ def get_report(report_id: int) -> ReportResponseSchema:
 
 def _sbom_to_schema(sbom: SBOMDocument) -> SBOMSchema:
     return SBOMSchema(format=sbom.format.value, content=sbom.content)
+
+
+def _component_to_schema(component: Component) -> ComponentSchema:
+    return ComponentSchema(
+        name=component.name,
+        version=component.version,
+        confidence=component.confidence,
+        evidence=[
+            {"source": item.source, "path": item.path, "detail": item.detail}
+            for item in component.evidence
+        ],
+        cpe=component.cpe,
+        cpe_candidates=list(component.cpe_candidates),
+        cpe_confidence=component.cpe_confidence,
+    )
+
+
+def _vulnerability_to_schema(vulnerability: Vulnerability) -> VulnerabilitySchema:
+    return VulnerabilitySchema(
+        cve_id=vulnerability.cve_id,
+        severity=vulnerability.severity,
+        description=vulnerability.description,
+        component_name=vulnerability.component_name,
+        component_version=vulnerability.component_version,
+        confidence=vulnerability.confidence,
+        evidence=[
+            {"source": item.source, "path": item.path, "detail": item.detail}
+            for item in vulnerability.evidence
+        ],
+        cvss=vulnerability.cvss,
+        affected_range=vulnerability.affected_range,
+        match_result=vulnerability.match_result,
+        data_source=vulnerability.data_source,
+        reasoning=vulnerability.reasoning,
+    )

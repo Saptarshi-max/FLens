@@ -10,6 +10,5 @@ class SquashfsExtractor(FirmwareExtractor):
 
     def extract(self, firmware_path: Path) -> ExtractionResult:
         raise ExtractionError(
-            "SquashFS extractor backend is not implemented yet. "
-            "Use BinwalkExtractor for Phase 2."
+            "SquashFS extractor backend is not implemented yet. Use BinwalkExtractor for Phase 2."
         )
