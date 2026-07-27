@@ -1,0 +1,45 @@
+{
+  "previous_existing_rootfs": {
+    "merged_components": 147,
+    "known_versions": 110,
+    "unknown_versions": 37,
+    "identity_status_counts": {
+      "ambiguous": 2,
+      "excluded": 34,
+      "insufficient_evidence": 106,
+      "resolved": 3,
+      "unsupported": 2
+    },
+    "governed_cpe_components": 3,
+    "legacy_cpe_components": 0,
+    "no_cpe_components": 144,
+    "vulnerability_count": 0
+  },
+  "docker_fresh_extraction": {
+    "merged_components": 224,
+    "known_versions": 110,
+    "unknown_versions": 114,
+    "identity_status_counts": {
+      "resolved": 3
+    },
+    "governed_cpe_components": 3,
+    "legacy_cpe_components": 0,
+    "no_cpe_components": 221,
+    "vulnerability_count": 0
+  },
+  "delta": {
+    "merged_components": 77,
+    "known_versions": 0,
+    "unknown_versions": 77
+  },
+  "comparison_limitations": [
+    "The batch scan-summary persists aggregate inventory/identity counts, not the full Docker component inventory. Added/removed components, changed versions, and filesystem diagnostic deltas cannot be derived without rerunning or adding a detailed inventory export.",
+    "The 77 additional Docker-extracted components are an extraction/inventory observation, not proof of valid additional software."
+  ],
+  "interpretation": {
+    "extraction_differences": "Fresh Linux extraction produced 224 merged components versus 147 from the Windows-preserved extracted rootfs.",
+    "inventory_differences": "No scanner behaviour was changed for this comparison.",
+    "identity_policy_differences": "Governed CPE count remained 3; no policy change is inferred.",
+    "vulnerability_correlation_differences": "Both AP96 runs recorded zero findings."
+  }
+}

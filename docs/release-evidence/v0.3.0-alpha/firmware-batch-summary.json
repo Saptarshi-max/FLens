@@ -1,0 +1,273 @@
+{
+  "total_firmware_files": 15,
+  "succeeded": 11,
+  "extraction_failed": 4,
+  "scan_failed": 0,
+  "report_generation_failed": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "source_firmware": "DIR878A1_FW100B13.bin",
+      "status": "extraction_failed",
+      "stage": "extraction",
+      "exception_type": "ExtractionError",
+      "reason": "Empty extraction result.",
+      "warnings": []
+    },
+    {
+      "source_firmware": "c7v5_us-up-ver1-2-1-P1[20220715-rel19099]_2022-07-15_17.44.43.bin",
+      "status": "succeeded",
+      "extraction_status": "succeeded",
+      "scan_status": "succeeded",
+      "merged_component_count": 387,
+      "known_version_count": 2,
+      "unknown_version_count": 385,
+      "resolved_identity_count": 4,
+      "governed_cpe_count": 4,
+      "legacy_cpe_count": 0,
+      "no_cpe_count": 383,
+      "vulnerability_count": 0,
+      "artefacts": {
+        "report": "output/sample-scans/c7v5_us-up-ver1-2-1-P1[20220715-rel19099]_2022-07-15_17.44.43-5fd4c55b5f/report.html",
+        "cyclonedx": "output/sample-scans/c7v5_us-up-ver1-2-1-P1[20220715-rel19099]_2022-07-15_17.44.43-5fd4c55b5f/cyclonedx.json",
+        "spdx": "output/sample-scans/c7v5_us-up-ver1-2-1-P1[20220715-rel19099]_2022-07-15_17.44.43-5fd4c55b5f/spdx.json",
+        "summary": "output/sample-scans/c7v5_us-up-ver1-2-1-P1[20220715-rel19099]_2022-07-15_17.44.43-5fd4c55b5f/scan-summary.json"
+      },
+      "warnings": []
+    },
+    {
+      "source_firmware": "carambola2-sysupgrade.bin",
+      "status": "succeeded",
+      "extraction_status": "succeeded",
+      "scan_status": "succeeded",
+      "merged_component_count": 282,
+      "known_version_count": 149,
+      "unknown_version_count": 133,
+      "resolved_identity_count": 3,
+      "governed_cpe_count": 3,
+      "legacy_cpe_count": 0,
+      "no_cpe_count": 279,
+      "vulnerability_count": 0,
+      "artefacts": {
+        "report": "output/sample-scans/carambola2-sysupgrade-79215be2ef/report.html",
+        "cyclonedx": "output/sample-scans/carambola2-sysupgrade-79215be2ef/cyclonedx.json",
+        "spdx": "output/sample-scans/carambola2-sysupgrade-79215be2ef/spdx.json",
+        "summary": "output/sample-scans/carambola2-sysupgrade-79215be2ef/scan-summary.json"
+      },
+      "warnings": []
+    },
+    {
+      "source_firmware": "firmware/dd-wrt/netgear-r6400v2-webflash.bin",
+      "status": "succeeded",
+      "extraction_status": "succeeded",
+      "scan_status": "succeeded",
+      "merged_component_count": 584,
+      "known_version_count": 3,
+      "unknown_version_count": 581,
+      "resolved_identity_count": 4,
+      "governed_cpe_count": 4,
+      "legacy_cpe_count": 0,
+      "no_cpe_count": 580,
+      "vulnerability_count": 0,
+      "artefacts": {
+        "report": "output/sample-scans/netgear-r6400v2-webflash-67b941d30f/report.html",
+        "cyclonedx": "output/sample-scans/netgear-r6400v2-webflash-67b941d30f/cyclonedx.json",
+        "spdx": "output/sample-scans/netgear-r6400v2-webflash-67b941d30f/spdx.json",
+        "summary": "output/sample-scans/netgear-r6400v2-webflash-67b941d30f/scan-summary.json"
+      },
+      "warnings": []
+    },
+    {
+      "source_firmware": "firmware/dd-wrt/netgear-r7000-webflash.bin",
+      "status": "succeeded",
+      "extraction_status": "succeeded",
+      "scan_status": "succeeded",
+      "merged_component_count": 572,
+      "known_version_count": 3,
+      "unknown_version_count": 569,
+      "resolved_identity_count": 4,
+      "governed_cpe_count": 4,
+      "legacy_cpe_count": 0,
+      "no_cpe_count": 568,
+      "vulnerability_count": 0,
+      "artefacts": {
+        "report": "output/sample-scans/netgear-r7000-webflash-ccc222648b/report.html",
+        "cyclonedx": "output/sample-scans/netgear-r7000-webflash-ccc222648b/cyclonedx.json",
+        "spdx": "output/sample-scans/netgear-r7000-webflash-ccc222648b/spdx.json",
+        "summary": "output/sample-scans/netgear-r7000-webflash-ccc222648b/scan-summary.json"
+      },
+      "warnings": []
+    },
+    {
+      "source_firmware": "firmware/openwrt/openwrt-ap96-19.07.10.bin",
+      "status": "succeeded",
+      "extraction_status": "succeeded",
+      "scan_status": "succeeded",
+      "merged_component_count": 224,
+      "known_version_count": 110,
+      "unknown_version_count": 114,
+      "resolved_identity_count": 3,
+      "governed_cpe_count": 3,
+      "legacy_cpe_count": 0,
+      "no_cpe_count": 221,
+      "vulnerability_count": 0,
+      "artefacts": {
+        "report": "output/sample-scans/openwrt-ap96-19.07.10-54b90d4297/report.html",
+        "cyclonedx": "output/sample-scans/openwrt-ap96-19.07.10-54b90d4297/cyclonedx.json",
+        "spdx": "output/sample-scans/openwrt-ap96-19.07.10-54b90d4297/spdx.json",
+        "summary": "output/sample-scans/openwrt-ap96-19.07.10-54b90d4297/scan-summary.json"
+      },
+      "warnings": []
+    },
+    {
+      "source_firmware": "firmware/openwrt/openwrt-meraki-mr16-19.07.10.bin",
+      "status": "succeeded",
+      "extraction_status": "succeeded",
+      "scan_status": "succeeded",
+      "merged_component_count": 212,
+      "known_version_count": 106,
+      "unknown_version_count": 106,
+      "resolved_identity_count": 3,
+      "governed_cpe_count": 3,
+      "legacy_cpe_count": 0,
+      "no_cpe_count": 209,
+      "vulnerability_count": 0,
+      "artefacts": {
+        "report": "output/sample-scans/openwrt-meraki-mr16-19.07.10-63e2a31c9d/report.html",
+        "cyclonedx": "output/sample-scans/openwrt-meraki-mr16-19.07.10-63e2a31c9d/cyclonedx.json",
+        "spdx": "output/sample-scans/openwrt-meraki-mr16-19.07.10-63e2a31c9d/spdx.json",
+        "summary": "output/sample-scans/openwrt-meraki-mr16-19.07.10-63e2a31c9d/scan-summary.json"
+      },
+      "warnings": []
+    },
+    {
+      "source_firmware": "firmware/openwrt/openwrt-onion-omega-19.07.10.bin",
+      "status": "succeeded",
+      "extraction_status": "succeeded",
+      "scan_status": "succeeded",
+      "merged_component_count": 238,
+      "known_version_count": 119,
+      "unknown_version_count": 119,
+      "resolved_identity_count": 3,
+      "governed_cpe_count": 3,
+      "legacy_cpe_count": 0,
+      "no_cpe_count": 235,
+      "vulnerability_count": 0,
+      "artefacts": {
+        "report": "output/sample-scans/openwrt-onion-omega-19.07.10-d0dddc1288/report.html",
+        "cyclonedx": "output/sample-scans/openwrt-onion-omega-19.07.10-d0dddc1288/cyclonedx.json",
+        "spdx": "output/sample-scans/openwrt-onion-omega-19.07.10-d0dddc1288/spdx.json",
+        "summary": "output/sample-scans/openwrt-onion-omega-19.07.10-d0dddc1288/scan-summary.json"
+      },
+      "warnings": []
+    },
+    {
+      "source_firmware": "firmware/openwrt/openwrt-packet-squirrel-19.07.10.bin",
+      "status": "succeeded",
+      "extraction_status": "succeeded",
+      "scan_status": "succeeded",
+      "merged_component_count": 212,
+      "known_version_count": 104,
+      "unknown_version_count": 108,
+      "resolved_identity_count": 3,
+      "governed_cpe_count": 3,
+      "legacy_cpe_count": 0,
+      "no_cpe_count": 209,
+      "vulnerability_count": 0,
+      "artefacts": {
+        "report": "output/sample-scans/openwrt-packet-squirrel-19.07.10-5f93ebe640/report.html",
+        "cyclonedx": "output/sample-scans/openwrt-packet-squirrel-19.07.10-5f93ebe640/cyclonedx.json",
+        "spdx": "output/sample-scans/openwrt-packet-squirrel-19.07.10-5f93ebe640/spdx.json",
+        "summary": "output/sample-scans/openwrt-packet-squirrel-19.07.10-5f93ebe640/scan-summary.json"
+      },
+      "warnings": []
+    },
+    {
+      "source_firmware": "firmware/sample_router.bin",
+      "status": "extraction_failed",
+      "stage": "extraction",
+      "exception_type": "ExtractionError",
+      "reason": "Empty extraction result.",
+      "warnings": []
+    },
+    {
+      "source_firmware": "linksys_ea6500_cfe.bin",
+      "status": "extraction_failed",
+      "stage": "extraction",
+      "exception_type": "ExtractionError",
+      "reason": "Empty extraction result.",
+      "warnings": []
+    },
+    {
+      "source_firmware": "linksys_ea6500_ddwrt.bin",
+      "status": "succeeded",
+      "extraction_status": "succeeded",
+      "scan_status": "succeeded",
+      "merged_component_count": 616,
+      "known_version_count": 3,
+      "unknown_version_count": 613,
+      "resolved_identity_count": 4,
+      "governed_cpe_count": 4,
+      "legacy_cpe_count": 0,
+      "no_cpe_count": 612,
+      "vulnerability_count": 0,
+      "artefacts": {
+        "report": "output/sample-scans/linksys_ea6500_ddwrt-9ab0a1428c/report.html",
+        "cyclonedx": "output/sample-scans/linksys_ea6500_ddwrt-9ab0a1428c/cyclonedx.json",
+        "spdx": "output/sample-scans/linksys_ea6500_ddwrt-9ab0a1428c/spdx.json",
+        "summary": "output/sample-scans/linksys_ea6500_ddwrt-9ab0a1428c/scan-summary.json"
+      },
+      "warnings": []
+    },
+    {
+      "source_firmware": "openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade.bin",
+      "status": "succeeded",
+      "extraction_status": "succeeded",
+      "scan_status": "succeeded",
+      "merged_component_count": 224,
+      "known_version_count": 110,
+      "unknown_version_count": 114,
+      "resolved_identity_count": 3,
+      "governed_cpe_count": 3,
+      "legacy_cpe_count": 0,
+      "no_cpe_count": 221,
+      "vulnerability_count": 0,
+      "artefacts": {
+        "report": "output/sample-scans/openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade-5794181e85/report.html",
+        "cyclonedx": "output/sample-scans/openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade-5794181e85/cyclonedx.json",
+        "spdx": "output/sample-scans/openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade-5794181e85/spdx.json",
+        "summary": "output/sample-scans/openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade-5794181e85/scan-summary.json"
+      },
+      "warnings": []
+    },
+    {
+      "source_firmware": "uploads/router.bin",
+      "status": "extraction_failed",
+      "stage": "extraction",
+      "exception_type": "ExtractionError",
+      "reason": "Empty extraction result.",
+      "warnings": []
+    },
+    {
+      "source_firmware": "wa701nv2_en_3_17_0_up_boot(140324).bin",
+      "status": "succeeded",
+      "extraction_status": "succeeded",
+      "scan_status": "succeeded",
+      "merged_component_count": 150,
+      "known_version_count": 1,
+      "unknown_version_count": 149,
+      "resolved_identity_count": 1,
+      "governed_cpe_count": 1,
+      "legacy_cpe_count": 0,
+      "no_cpe_count": 149,
+      "vulnerability_count": 0,
+      "artefacts": {
+        "report": "output/sample-scans/wa701nv2_en_3_17_0_up_boot(140324)-5ac5257880/report.html",
+        "cyclonedx": "output/sample-scans/wa701nv2_en_3_17_0_up_boot(140324)-5ac5257880/cyclonedx.json",
+        "spdx": "output/sample-scans/wa701nv2_en_3_17_0_up_boot(140324)-5ac5257880/spdx.json",
+        "summary": "output/sample-scans/wa701nv2_en_3_17_0_up_boot(140324)-5ac5257880/scan-summary.json"
+      },
+      "warnings": []
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 [project]
 name = "flens"
-version = "0.1.0"
-description = "Firmware Linux Embedded Security platform - Phase 1 MVP"
+version = "0.1.0a1"
+description = "Offline-first embedded Linux firmware inventory and vulnerability intelligence platform"
+license = {text = "Apache-2.0"}
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

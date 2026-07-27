@@ -66,5 +66,7 @@ sample_data/firmware/**/*.trx
 sample_data/firmware/**/*.chk
 sample_data/firmware/**/*.ubi
 sample_data/firmware/**/*.itb
+sample_data/*.bin
 sample_data/firmware-inbox/*
 output/scan-logs/
+docker-work/

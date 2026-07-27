@@ -1,0 +1,53 @@
+{
+  "failures": [
+    {
+      "firmware": "DIR878A1_FW100B13.bin",
+      "size": 9651099,
+      "sha256": "7f06516ed6efba88f367638d398fab4bc616baf4a5c7d3a71e15fcc5ef61d80e",
+      "file_type": "u-boot legacy uImage, Linux/MIPS kernel, LZMA",
+      "signatures": [
+        "uImage @0",
+        "LZMA @0xA0"
+      ],
+      "extraction_output": "No recognised rootfs candidate",
+      "classification": "valid firmware but no supported filesystem extracted",
+      "confidence": "high",
+      "batch_reason": "Empty extraction result."
+    },
+    {
+      "firmware": "firmware/sample_router.bin",
+      "size": 28,
+      "sha256": "542b8c34e5df42fcfcc95a6f332987c7d838366576cb670cf612097eda849f34",
+      "file_type": "ASCII text with CRLF",
+      "signatures": [],
+      "extraction_output": "No extraction output",
+      "classification": "likely synthetic fixture",
+      "confidence": "high",
+      "batch_reason": "Empty extraction result."
+    },
+    {
+      "firmware": "linksys_ea6500_cfe.bin",
+      "size": 232049,
+      "sha256": "ab6b6e6e81268f62949eb78723bee10dae1aac37d2d1e7a673878536264dcf9b",
+      "file_type": "data",
+      "signatures": [
+        "LZMA @0x24004"
+      ],
+      "extraction_output": "No recognised rootfs candidate",
+      "classification": "likely bootloader-only",
+      "confidence": "medium",
+      "batch_reason": "Empty extraction result."
+    },
+    {
+      "firmware": "uploads/router.bin",
+      "size": 14,
+      "sha256": "b3d2053151449418946eb62009c05bc3fe73d300341648fe09b3e0855baa4e87",
+      "file_type": "ASCII text",
+      "signatures": [],
+      "extraction_output": "No extraction output",
+      "classification": "likely synthetic fixture",
+      "confidence": "high",
+      "batch_reason": "Empty extraction result."
+    }
+  ]
+}

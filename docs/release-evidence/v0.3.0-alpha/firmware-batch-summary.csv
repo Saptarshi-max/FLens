@@ -1,0 +1,16 @@
+source_firmware,status,stage,reason
+DIR878A1_FW100B13.bin,extraction_failed,extraction,Empty extraction result.
+c7v5_us-up-ver1-2-1-P1[20220715-rel19099]_2022-07-15_17.44.43.bin,succeeded,,
+carambola2-sysupgrade.bin,succeeded,,
+firmware/dd-wrt/netgear-r6400v2-webflash.bin,succeeded,,
+firmware/dd-wrt/netgear-r7000-webflash.bin,succeeded,,
+firmware/openwrt/openwrt-ap96-19.07.10.bin,succeeded,,
+firmware/openwrt/openwrt-meraki-mr16-19.07.10.bin,succeeded,,
+firmware/openwrt/openwrt-onion-omega-19.07.10.bin,succeeded,,
+firmware/openwrt/openwrt-packet-squirrel-19.07.10.bin,succeeded,,
+firmware/sample_router.bin,extraction_failed,extraction,Empty extraction result.
+linksys_ea6500_cfe.bin,extraction_failed,extraction,Empty extraction result.
+linksys_ea6500_ddwrt.bin,succeeded,,
+openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade.bin,succeeded,,
+uploads/router.bin,extraction_failed,extraction,Empty extraction result.
+wa701nv2_en_3_17_0_up_boot(140324).bin,succeeded,,

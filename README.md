@@ -1,550 +1,278 @@
 # FLENS
 
-<!-- FIRMWARE_VALIDATION_START -->
+**FLENS (Firmware Linux Embedded Security)** is an offline-first firmware analysis
+platform for embedded Linux images. It helps engineers understand what software
+is inside a firmware image, which versions can be identified, which known
+vulnerabilities may apply, and produces HTML, [CycloneDX](https://cyclonedx.org/), and [SPDX](https://spdx.dev/) reports.
 
-## Firmware Validation Matrix
+> **Alpha status.** FLENS is an alpha-stage analysis tool, not a guarantee that firmware is
+> secure. Zero matched vulnerabilities does not mean zero vulnerabilities.
 
-| Project / Vendor | Device / Target | Firmware Version | Image File | SHA-256 | FLENS Report | Status |
-|---|---|---|---|---|---|---|
-| OpenWrt | ALFA Network AP96 | 19.07.10 | `Unknown` | `Unknown` | _Pending_ | 🖐 manual_download_required |
-| TP-Link | TL-WA701ND | 140324 | `Unknown` | `Unknown` | _Pending_ | 🖐 manual_download_required |
-| DD-WRT | Netgear R7000 | r63485 | `Unknown` | `Unknown` | _Pending_ | 🖐 manual_download_required |
-| FreshTomato | Netgear R7000 | Unknown | `Unknown` | `Unknown` | _Pending_ | 🖐 manual_download_required |
+![flens](/flens.jpeg)
+## Features
 
-<!-- FIRMWARE_VALIDATION_END -->
+- Offline firmware analysis
+- Evidence-backed component identification
+- Conservative CPE mapping
+- Offline CVE correlation
+- [CycloneDX](https://cyclonedx.org/) and [SPDX](https://spdx.dev/) SBOM generation
+- HTML reporting
+- Batch firmware scanning
+- Docker and Docker Compose support
 
-![flens-logo](/flens.jpeg)
+## Why FLENS
 
-Flens can analyze embedded Linux firmware, identify software components, map known vulnerabilities, and generate actionable security reports.
+Embedded firmware is difficult to inspect reproducibly: extraction varies by format, component
+names are ambiguous, CPE mapping needs governance, and SBOM/vulnerability output needs evidence
+and limitations. FLENS makes these decisions visible rather than silently guessing.
 
-FLENS is a Python-based CLI firmware security analysis tool designed for embedded Linux systems such as routers, IoT gateways, industrial controllers, cameras, and edge devices.
+FLENS is intended for:
 
-FLENS inventories installed software from package metadata and binary analysis, resolves CPE identifiers, performs evidence-backed version-range correlation through pluggable offline vulnerability feeds, and produces transparent reports and SBOMs.
+- Embedded Linux engineers
+- Firmware security researchers
+- Product security teams
+- SBOM generation
+- Vulnerability assessment
+- Supply-chain analysis
 
-The project aims to bring firmware security closer to embedded software development by combining component discovery, vulnerability identification, risk assessment, and reporting into an extensible engineering workflow.
+## Where FLENS fits
 
----
+FLENS is intended for firmware security researchers, embedded Linux engineers,
+SBOM generation, and vulnerability assessment workflows.
 
-## Why FLENS?
-
-
-Firmware often contains hundreds of third-party components:
-
-* OpenSSL
-* BusyBox
-* Dropbear
-* Curl
-* Nginx
-* Linux Kernel packages
-
-Many products ship with outdated or vulnerable versions of these components, creating hidden security risks.
-
-FLENS helps answer questions like:
-
-* What software exists inside this firmware?
-* Which versions are present?
-* Are any known vulnerabilities affecting them?
-* What is the overall risk profile?
-* How does one firmware release compare to another?
-
-## Where FLENS Fits
-
-Existing firmware analysis tools are excellent at extracting and inspecting firmware images. However, embedded teams often need more than a one-time security scan.
-
-FLENS focuses on the engineering workflow:
-
-- Integrating firmware security checks into development pipelines
-- Tracking component risks across firmware releases
-- Generating actionable reports for developers and reviewers
-- Providing an extensible foundation for SBOM, vulnerability management, and CI/CD security gates
-
-Instead of treating firmware analysis as a manual security exercise, FLENS aims to make it part of the embedded software lifecycle.
-
-Example workflow:
-
-```
-Yocto Build / Firmware Release
-│
-▼
-FLENS Analysis
-│
-▼
-Components + CVEs + Risk Score
-│
-▼
-Security Report / Release Decision
-
-```
-
-FLENS bridges the gap between **firmware reverse engineering tools** and **everyday embedded software engineering workflows**.
-
----
-
-## Current Capabilities
-
-### Component Discovery
-
-Automatically identifies known software components inside an extracted firmware filesystem.
-
-FLENS records the evidence used for each inventory entry. Versions are resolved only from
-installed package databases (`opkg`, `dpkg`, or `apk`) or version banners embedded in
-binaries. When no version can be verified, the component is reported as `Unknown`; FLENS
-does not infer a version from its filename.
-
-Example:
+It sits between firmware acquisition and manual reverse engineering:
 
 ```text
-OpenSSL 1.1.1d
-BusyBox 1.31.1
-Dropbear 2020.79
+Vendor Firmware
+        │
+        ▼
+Extraction
+        │
+        ▼
+      FLENS
+        │
+        ├── Component inventory
+        ├── Version evidence
+        ├── Identity resolution
+        ├── Governed CPE mapping
+        ├── Offline vulnerability correlation
+        ├── HTML report
+        ├── CycloneDX SBOM
+        └── SPDX SBOM
+        │
+        ▼
+Security review / Compliance / Further reverse engineering
 ```
+### FLENS is designed to answer:
 
-### Vulnerability Mapping
+- What software is inside this firmware?
+- Which component versions can be supported by evidence?
+- Which identities can safely map to a CPE?
+- Which known vulnerabilities match that evidence?
+- What remains unknown and requires manual investigation?
 
-Correlates detected software versions against a vulnerability database.
+It is not a firmware extractor, vulnerability scanner or reverse-engineering
+framework alone. It provides a reproducible analysis pipeline that connects these
+steps into a single evidence-driven workflow.
 
-Each vulnerability match retains the component/version evidence and the vulnerability-source
-record used for the correlation. Components with an `Unknown` version are not matched.
+## Current capabilities
 
-Example:
-
-```text
-OpenSSL 1.1.1d
-
-→ CVE-2022-0778
-→ CVE-2021-3711
-```
-
-### Risk Assessment
-
-Calculates an overall firmware security score using configurable severity weighting.
-
-Example:
-
-```text
-Risk Level: HIGH
-```
-
-### Report Generation
-
-Produces human-readable HTML reports suitable for audits, reviews, and release validation.
-
-Reports include:
-
-* Risk score breakdown
-* Vulnerability detection explanation
-* Transparency & methodology references
-* Security disclaimer
-
-### SBOM Generation
-
-Generates machine-readable SBOMs in both CycloneDX JSON and SPDX JSON formats for each scan.
-
-### Persistent Scan History
-
-Stores scan artifacts in SQLite for report retrieval and auditability:
-
-* Components
-* Vulnerabilities
-* Risk score
-* SBOM payloads
-* Firmware metadata
-
-### Firmware Metadata + ELF Intelligence
-
-Enhances detection with:
-
-* ELF architecture parsing
-* Binary string fingerprints for component identification fallback
-* Firmware kernel and vendor hints from extracted rootfs
-
----
-
-## Example Scan
-
-Input:
-
-```text
-rootfs/
-├── bin/
-│   ├── busybox
-│   ├── openssl
-│   └── dropbear
-```
-
-Output:
-
-```text
-──────────────────────────
-FLENS Security Report
-──────────────────────────
-
-Detected Components
-
-• BusyBox 1.31.1
-• OpenSSL 1.1.1d
-• Dropbear 2020.79
-
-Detected Vulnerabilities
-
-• CVE-2022-0778 (HIGH)
-• CVE-2021-3711 (HIGH)
-
-Overall Risk
-
-HIGH
-```
-
----
+- Linux firmware extraction and rootfs discovery
+- Package, known-binary, and ELF executable and shared library analysis
+- Deterministic inventory merge with version evidence
+- Governed identity resolution and CPE selection
+- Offline vulnerability correlation
+- HTML, [CycloneDX](https://cyclonedx.org/), [SPDX](https://spdx.dev/) and batch-scan output
+- ARM64 Docker and Docker Compose workflows
 
 ## Architecture
 
-FLENS follows Clean Architecture principles to separate business logic from implementation details.
+```mermaid
+flowchart TD
+    A[Firmware Image]
+    B[Extraction]
+    C[Root Filesystem]
+    D[Evidence Collection]
+    E[Inventory]
+    F[Identity Resolution]
+    G[CPE Mapping]
+    H[Vulnerability Correlation]
+    I[Reports & SBOMs]
 
-```text
-Root Filesystem
-        │
-        ▼
-Component Detection
-        │
-        ▼
-Version Resolution
-        │
-        ▼
-Vulnerability Mapping
-        │
-        ▼
-Risk Assessment
-        │
-        ▼
-HTML Report / API Response
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I
 ```
 
-Project Structure:
 
-```text
-flens/
-├── app/
-│   ├── domain/
-│   ├── application/
-│   ├── infrastructure/
-│   ├── presentation/
-│   └── config/
-├── tests/
-├── sample_data/
-├── docs/
-└── pyproject.toml
-```
+## Identity and CPE Mapping
 
----
+Firmware often contains the same software under different names, incomplete
+version information, or ambiguous identifiers.
 
-## Prerequisites
+FLENS combines evidence from packages, binaries, and shared libraries to
+identify software components and map them to official CPEs (Common Platform
+Enumeration identifiers).
 
-Before running FLENS, make sure the following are in place:
+Mappings are only made when supported by sufficient evidence. If confidence is
+too low, FLENS reports the component as **Unknown** rather than making an
+incorrect vulnerability match.
 
-* Python 3.12+
-* The same virtual environment is used for install and runtime
-* Python dependencies installed with `pip install -e .[dev]`
-* For firmware image analysis, native extraction tools installed in the same shell/environment:
-        * `binwalk`
-        * `squashfs-tools`
-        * `sasquatch` for legacy/vendor-modified SquashFS (included in the Docker image)
+This conservative approach reduces false positives and makes every
+vulnerability match traceable back to the evidence used to identify the
+software.
 
-If you run `flens` from a different Python environment than the one used for installation, you can get missing-module errors or incomplete analysis. For firmware reports, that can also lead to misleading output, so it is better to stop and fix the environment first.
+## Validation
 
-Recommended Windows workflow:
+FLENS has been validated using an ARM64 Docker environment against a corpus of
+15 embedded Linux firmware images.
+
+Validation included:
+
+- Firmware extraction
+- Component inventory generation
+- Identity resolution
+- Governed CPE mapping
+- Offline vulnerability correlation
+- HTML report generation
+- CycloneDX and SPDX SBOM generation
+- Batch scanning with Docker Compose
+
+Results:
+
+- 15 firmware images analysed
+- 11 firmware images successfully extracted and analysed
+- 4 images that could not be fully analysed
+- 96 automated tests passed (1 platform-specific skipped)
+- Ruff and MyPy passed
+- ARM64 Docker and Docker Compose validated
+
+Detailed validation evidence is available in
+[`docs/release-evidence`](docs/release-evidence/v0.3.0-alpha/).
+
+> FLENS is an evidence-driven analysis tool. Zero matched vulnerabilities does
+> **not** imply that firmware is secure or free from vulnerabilities.
+
+
+## Validated Firmware Reports
+
+FLENS was evaluated on a representative corpus of embedded Linux firmware from
+commercial vendors and open-source distributions.
+
+| Validation Summary | |
+|--------------------|--:|
+| Firmware images tested | **15** |
+| Successful analyses | **11** |
+| Extraction failures | **4** |
+| HTML reports generated | **11** |
+| PDF reports published | **11** |
+| Architectures | **MIPS, ARM** |
+
+The reports below are the exact outputs generated by FLENS during validation.
+
+> `0 matched CVEs` indicates that no vulnerabilities matched the configured
+> local vulnerability dataset. It should not be interpreted as proof that the
+> firmware is secure.
+
+
+| Firmware | Result | Components | Analysis Report | Official Firmware Source |
+|---|---|---:|---|---|
+| TP-Link Archer C7 v5 | Succeeded - 0 matched CVEs | 387 | [PDF](docs/release-evidence/v0.3.0-alpha/reports/flens-archer-c7-v5-report.pdf) | [TP-Link Archer C7 v5 download page](https://www.tp-link.com/support/download/archer-c7/v5/) |
+| 8devices Carambola 2 | Succeeded - 0 matched CVEs | 282 | [PDF](docs/release-evidence/v0.3.0-alpha/reports/flens-carambola2-report.pdf) | Source not recorded for the exact image |
+| Netgear R6400v2 DD-WRT | Succeeded - 0 matched CVEs | 584 | [PDF](docs/release-evidence/v0.3.0-alpha/reports/flens-netgear-r6400v2-ddwrt-report.pdf) | Source not recorded for the exact image |
+| Netgear R7000 DD-WRT | Succeeded - 0 matched CVEs | 572 | [PDF](docs/release-evidence/v0.3.0-alpha/reports/flens-netgear-r7000-ddwrt-report.pdf) | Source not recorded for the exact image |
+| ALFA AP96 OpenWrt 19.07.10 | Succeeded - 0 matched CVEs | 224 | [PDF](docs/release-evidence/v0.3.0-alpha/reports/flens-openwrt-ap96-19.07.10-report.pdf) | [OpenWrt 19.07.10 release page](https://downloads.openwrt.org/releases/19.07.10/) |
+| Meraki MR16 OpenWrt 19.07.10 | Succeeded - 0 matched CVEs | 212 | [PDF](docs/release-evidence/v0.3.0-alpha/reports/flens-openwrt-meraki-mr16-19.07.10-report.pdf) | [OpenWrt 19.07.10 release page](https://downloads.openwrt.org/releases/19.07.10/) |
+| Onion Omega OpenWrt 19.07.10 | Succeeded - 0 matched CVEs | 238 | [PDF](docs/release-evidence/v0.3.0-alpha/reports/flens-openwrt-onion-omega-19.07.10-report.pdf) | [OpenWrt 19.07.10 release page](https://downloads.openwrt.org/releases/19.07.10/) |
+| Packet Squirrel OpenWrt 19.07.10 | Succeeded - 0 matched CVEs | 212 | [PDF](docs/release-evidence/v0.3.0-alpha/reports/flens-openwrt-packet-squirrel-19.07.10-report.pdf) | [OpenWrt 19.07.10 release page](https://downloads.openwrt.org/releases/19.07.10/) |
+| Linksys EA6500 DD-WRT | Succeeded - 0 matched CVEs | 616 | [PDF](docs/release-evidence/v0.3.0-alpha/reports/flens-linksys-ea6500-ddwrt-report.pdf) | Source not recorded for the exact image |
+| ALFA AP96 sysupgrade OpenWrt 19.07.10 | Succeeded - 0 matched CVEs | 224 | [PDF](docs/release-evidence/v0.3.0-alpha/reports/flens-openwrt-ap96-sysupgrade-19.07.10-report.pdf) | [OpenWrt ar71xx/generic downloads](https://downloads.openwrt.org/releases/19.07.10/targets/ar71xx/generic/) |
+| TP-Link TL-WA701ND v2 | Succeeded - 0 matched CVEs | 150 | [PDF](docs/release-evidence/v0.3.0-alpha/reports/flens-tplink-tl-wa701nd-v2-report.pdf) | [TP-Link TL-WA701ND v2 download page](https://www.tp-link.com/support/download/tl-wa701nd/v2/) |
+
+### Extraction Failures
+
+| Original input | Result |
+|---|---|
+| `DIR878A1_FW100B13.bin` | Extraction failed - no report generated |
+| `firmware/sample_router.bin` | Extraction failed - no report generated |
+| `linksys_ea6500_cfe.bin` | Extraction failed - no report generated |
+| `uploads/router.bin` | Extraction failed - no report generated |
+## Quick start: Docker
+
+Docker is the recommended extraction path on Windows. Extraction occurs in the Linux `/work`
+volume; `sample_data` is read-only and final artefacts are written to the host `output/` mount.
 
 ```powershell
-.\.venv\Scripts\Activate.ps1
-pip install -e .[dev]
+docker build --platform linux/arm64 -t flens:docker .
+docker compose up --build --abort-on-container-exit
+docker compose down
 ```
 
-## Quick Start
+The Compose defaults scan `/workspace/sample_data` into `/workspace/output/sample-scans`.
+Override them with `FLENS_INPUT_DIR` and `FLENS_OUTPUT_DIR`. `docker compose down -v` also removes
+the named Linux workspace volume.
 
-### Choose the Right Command
+## Local development
 
-| Input you have | Command to use | When Docker is useful |
-| --- | --- | --- |
-| An extracted firmware directory, such as `squashfs-root/` | `flens scan <rootfs-path>` | Optional; Python dependencies are sufficient. |
-| A firmware image, such as `.bin`, `.img`, or `.trx` | `flens firmware <firmware-path>` | Recommended on Windows or when `binwalk` and `squashfs-tools` are not installed locally. |
-
-`flens scan` does not extract firmware. Passing a `.bin` file to it will not find components because it expects a directory of extracted files. Use `flens firmware` for the image first.
-
-### Firmware Analysis with Docker
-
-On Windows, or whenever `binwalk` and `squashfs-tools` are unavailable locally, build the included image from the repository root:
+Python 3.12+ is required.
 
 ```powershell
-docker build -t flens:local .
+uv sync
+uv run pytest
+uv run ruff check .
+uv run mypy app scripts
 ```
 
-Then mount the repository and write the report to a path inside that mount. For example, to analyze the included OpenWrt image:
+## CLI and batch scanning
 
 ```powershell
-docker run --rm -v "${PWD}:/workspace" flens:local firmware `
-    /workspace/sample_data/openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade.bin `
-    --report-out /workspace/docs/openwrt-report.html
+flens scan sample_data/rootfs --report-out output/rootfs-report.html --sbom-out output
+flens firmware firmware.bin --report-out output/report.html --sbom-out output
+python scripts/scan_sample_firmware.py --input-dir sample_data --output-dir output/sample-scans --work-dir work --overwrite
 ```
 
-The generated `docs/openwrt-report.html` remains in the local repository because `/workspace` is mounted from the host.
+The batch runner writes `batch-summary.json`, `batch-summary.csv`, a batch README, and one
+collision-safe directory per successful firmware containing `report.html`, `cyclonedx.json`,
+`spdx.json`, and `scan-summary.json`.
 
-Navigate the CLI with:
 
-```powershell
-flens --help
-flens scan --help
-flens firmware --help
-```
 
-Install:
+## Limitations
 
-```bash
-pip install -e .[dev]
-```
-
-Run a scan:
-
-```bash
-flens scan sample_data/rootfs
-```
-
-Generate an HTML report:
-
-```bash
-flens scan sample_data/rootfs \
-    --report-out report.html
-```
-
-Generate SBOM exports (SPDX + CycloneDX):
-
-```bash
-flens scan sample_data/rootfs \
-        --report-out output/report.html \
-        --sbom-out output
-```
-
-## Example Reports
-
-| Rootfs fixture | OpenWrt firmware image |
-| --- | --- |
-| <img src="docs/images/rootfs-fixture-report.png" alt="HTML report for the controlled rootfs fixture" width="450"> | <img src="docs/images/openwrt-report.png" alt="HTML report for an extracted OpenWrt firmware image" width="450"> |
-
-The rootfs fixture is deliberately small and deterministic: it contains placeholder binaries for BusyBox, Dropbear, and OpenSSL. It is useful for quick CLI and report tests.
-
-The OpenWrt example is produced by extracting a real `squashfs-sysupgrade.bin` firmware image. It demonstrates the complete extraction-to-report workflow. Current component versions and CVE matches come from FLENS's bundled static test dataset, so treat the findings as pipeline examples rather than a production vulnerability assessment.
-
-Analyze a firmware image directly:
-
-```bash
-flens firmware sample_data/firmware/sample_router.bin --report-out firmware_report.html
-```
-
-Analyze firmware image and export SBOMs:
-
-```bash
-flens firmware sample_data/firmware/sample_router.bin \
-        --report-out output/report.html \
-        --sbom-out output
-```
-
-Generated files:
-
-```text
-output/
-├── report.html
-├── report.spdx.json
-└── report.cyclonedx.json
-```
-
-Optional: set FLENS_REPOSITORY_URL to render clickable methodology links in HTML reports.
-
-Example:
-
-```bash
-set FLENS_REPOSITORY_URL=https://github.com/example/flens
-```
-
----
-
-## API
-
-Run locally:
-
-```bash
-uvicorn app.presentation.api.main:api --reload
-```
-
-Open:
-
-```text
-http://localhost:8000/docs
-```
-
-Available endpoints:
-
-```http
-GET  /health
-POST /scan
-POST /firmware/upload
-GET  /reports/{report_id}
-```
-
-Example scan request:
-
-```json
-{
-        "rootfs_path": "sample_data/rootfs"
-}
-```
-
-Example scan response (persisted):
-
-```json
-{
-        "components": [
-                {"name": "openssl", "version": "1.1.1d"}
-        ],
-        "vulnerabilities": [
-                {
-                        "cve_id": "CVE-2022-0778",
-                        "severity": "HIGH",
-                        "description": "Infinite loop in BN_mod_sqrt"
-                }
-        ],
-        "risk_score": "HIGH",
-        "report_id": 1
-}
-```
-
----
-
-## Quality Standards
-
-FLENS includes:
-
-* Type hints
-* Dependency injection
-* Unit tests
-* Integration tests
-* Static analysis
-* HTML reporting
-* CI-ready structure
-
-Validation:
-
-```bash
-ruff check .
-mypy .
-pytest -v
-pytest --cov
-```
-
----
+Firmware format coverage, version evidence, governed CPE coverage, and local vulnerability data are
+incomplete. Encrypted/proprietary firmware and bootloader-only images may not yield a rootfs. FLENS
+does not provide regulatory-compliance guarantees.
 
 ## Roadmap
 
-### Phase 1 - Foundation ✅
+Planned improvements include:
 
-* Component detection
-* Version resolution
-* CVE matching
-* Risk scoring
-* CLI interface
-* HTML reporting
+- Improved version extraction
+- Additional filesystem support
+- Expanded CPE coverage
+- Live CVE database updates
+- Richer HTML reports
+- Performance improvements
 
-### Phase 2 - Firmware Extraction
+## Quality
 
-```text
-firmware.bin
-      │
-      ▼
-    Binwalk
-      ▼
-    rootfs
-```
+Release-preparation validation recorded 96 passing tests and one platform-specific skip, plus 44
+focused tests; Ruff, MyPy, ARM64 Docker, Compose, and a 15-image batch were validated.
 
-* Direct firmware analysis
-* Filesystem extraction
-* Metadata discovery
+## Contributing and security
 
-### Phase 3 - SBOM Generation
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). Evidence is required for
+new version detection, identity aliases, CPE mappings, and vulnerability matches.
 
-* SPDX + CycloneDX generation
-* SQLite persistence for reports
-* ELF-assisted component identification
-* Firmware metadata extraction
-* Expanded API for upload and report retrieval
 
-### Phase 4 - Secret Discovery
 
-Detect:
+## Licence
 
-* Private keys
-* API keys
-* Credentials
-* Certificates
-
-### Phase 5 - Firmware Diffing
-
-Compare releases:
-
-```text
-Firmware A
-     vs
-Firmware B
-```
-
-Identify:
-
-* Added packages
-* Removed packages
-* New vulnerabilities
-* Fixed vulnerabilities
-
-### Phase 6 - Security Platform
-
-* Scan history
-* Dashboard
-* Multi-user support
-* Automated analysis pipelines
-
----
-
-## Technology Stack
-
-* Python 3.12+
-* FastAPI
-* Pydantic
-* Typer
-* Jinja2
-* Pytest
-* Ruff
-* MyPy
-
----
-
-## Motivation
-
-FLENS is designed for engineers building embedded Linux products who need visibility into the security posture of their firmware before deployment.
-
-FLENS was created to explore the intersection of:
-
-* Embedded Linux
-* Firmware Analysis
-* Software Supply Chain Security
-* Vulnerability Management
-* Modern Python Architecture
-
-The long-term vision is to evolve FLENS into a comprehensive firmware security platform capable of analyzing, comparing, and monitoring embedded software releases at scale.
-
----
-
-## Methodology Documentation
-
-See:
-
-* docs/risk_scoring.md
-* docs/vulnerability_detection.md
-* docs/sbom.md
-* docs/legacy_squashfs.md
-
+FLENS is licensed under [Apache-2.0](LICENSE). Firmware samples are governed separately by
+[firmware provenance](docs/firmware-provenance.md); users should provide their own legally obtained
+firmware where redistribution is not documented.

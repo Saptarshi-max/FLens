@@ -10,4 +10,5 @@ __pycache__/
 # They are runtime artifacts and must never be copied into the image.
 sample_data/extracted/
 sample_data/uploads/
+sample_data/firmware/
 flens.db
