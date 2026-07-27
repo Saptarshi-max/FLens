@@ -1,0 +1,14 @@
+name: Docker
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t flens .
+      - run: docker run --rm --entrypoint binwalk flens --help
+      - run: docker run --rm --entrypoint pytest flens

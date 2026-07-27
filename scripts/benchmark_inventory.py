@@ -1,0 +1,202 @@
+"""Measure the current inventory engine against locally available firmware roots."""
+
+import csv
+import json
+import time
+from dataclasses import asdict
+from pathlib import Path
+
+from app.domain.entities.component import Component
+from app.infrastructure.parsers.filesystem_component_detector import (
+    FileSystemComponentDetector,
+)
+from app.infrastructure.parsers.firmware_version_resolver import FirmwareVersionResolver
+
+ROOT = Path(__file__).resolve().parents[1]
+OUTPUT = ROOT / "output" / "inventory-benchmarks"
+FIRMWARE = ROOT / "sample_data" / "firmware" / "openwrt"
+AP96_ROOTFS = (
+    ROOT
+    / "sample_data"
+    / "extracted"
+    / "openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade_extract"
+    / "_openwrt-19.07.10-ar71xx-generic-alfa-ap96-squashfs-sysupgrade.bin.extracted"
+    / "squashfs-root"
+)
+OPENWRT_IMAGES = (
+    ("openwrt-ap96-19.07.10.bin", AP96_ROOTFS),
+    ("openwrt-meraki-mr16-19.07.10.bin", None),
+    ("openwrt-onion-omega-19.07.10.bin", None),
+    ("openwrt-packet-squirrel-19.07.10.bin", None),
+)
+
+
+def _package_database_types(rootfs: Path) -> list[str]:
+    paths = {
+        "opkg": rootfs / "usr/lib/opkg/status",
+        "dpkg": rootfs / "var/lib/dpkg/status",
+        "apk": rootfs / "lib/apk/db/installed",
+    }
+    detected: list[str] = []
+    for name, path in paths.items():
+        try:
+            if path.is_file() and not path.is_symlink():
+                detected.append(name)
+        except OSError:
+            continue
+    return detected
+
+
+def _architecture_observations(components: tuple[Component, ...]) -> list[str]:
+    observed: set[str] = set()
+    for component in components:
+        if component.architecture != "Unknown":
+            observed.add(component.architecture)
+        for key, value in component.metadata:
+            if key == "observed_architecture":
+                observed.add(value)
+    return sorted(observed)
+
+
+def _unavailable_measurement(image: Path) -> dict[str, object]:
+    return {
+        "firmware_image": image.relative_to(ROOT).as_posix(),
+        "extraction_success": False,
+        "extracted_rootfs": None,
+        "extraction_warnings": [
+            "No existing extracted root filesystem is available for this image.",
+            "binwalk and unsquashfs are unavailable on the active Windows PATH; "
+            "extraction was not attempted.",
+        ],
+        "package_database_types": [],
+        "architecture_observations": [],
+        "top_detected_components": [],
+        "scan_duration_seconds": None,
+        "legacy_component_count": None,
+        "legacy_comparison": "Unavailable: no retained legacy detector path exists.",
+    }
+
+
+def _measurement(image: Path, rootfs: Path | None) -> dict[str, object]:
+    if rootfs is None or not rootfs.is_dir():
+        return _unavailable_measurement(image)
+
+    started = time.perf_counter()
+    result = FileSystemComponentDetector(
+        FirmwareVersionResolver()
+    ).detect_with_statistics(rootfs)
+    duration = time.perf_counter() - started
+    return {
+        "firmware_image": image.relative_to(ROOT).as_posix(),
+        "extraction_success": True,
+        "extracted_rootfs": rootfs.relative_to(ROOT).as_posix(),
+        "extraction_warnings": [
+            "Reused existing extracted root filesystem; extraction was not rerun."
+        ],
+        "package_database_types": _package_database_types(rootfs),
+        "architecture_observations": _architecture_observations(result.components),
+        "top_detected_components": [component.name for component in result.components[:10]],
+        "scan_duration_seconds": round(duration, 3),
+        "statistics": asdict(result.statistics),
+        "legacy_component_count": None,
+        "legacy_comparison": "Unavailable: no retained legacy detector path exists.",
+    }
+
+
+def _csv_rows(measurements: list[dict[str, object]]) -> list[dict[str, object]]:
+    rows: list[dict[str, object]] = []
+    for measurement in measurements:
+        row = dict(measurement.get("statistics", {}))
+        row.update(
+            {
+                "firmware_image": measurement["firmware_image"],
+                "extraction_success": measurement["extraction_success"],
+                "extracted_rootfs": measurement["extracted_rootfs"],
+                "package_database_types": ";".join(
+                    measurement["package_database_types"]
+                ),
+                "architecture_observations": ";".join(
+                    measurement["architecture_observations"]
+                ),
+                "scan_duration_seconds": measurement["scan_duration_seconds"],
+                "legacy_component_count": measurement["legacy_component_count"],
+            }
+        )
+        rows.append(row)
+    return rows
+
+
+def _readme(measurements: list[dict[str, object]]) -> str:
+    lines = [
+        "# Inventory Engine v2 benchmark",
+        "",
+        (
+            "Generated by `python scripts/benchmark_inventory.py` using local firmware "
+            "and extracted roots."
+        ),
+        "",
+        (
+            "| Firmware | Extracted | Packages | ELF examined | Raw | Merged | Known | "
+            "Unknown | CPEs | Duration |"
+        ),
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for measurement in measurements:
+        statistics = measurement.get("statistics", {})
+        lines.append(
+            "| {firmware} | {success} | {packages} | {elf} | {raw} | {merged} | "
+            "{known} | {unknown} | {cpes} | {duration} |".format(
+                firmware=measurement["firmware_image"],
+                success="yes" if measurement["extraction_success"] else "no",
+                packages=statistics.get("package_records_discovered", "—"),
+                elf=statistics.get("elf_files_examined", "—"),
+                raw=statistics.get("raw_components_discovered", "—"),
+                merged=statistics.get("merged_components", "—"),
+                known=statistics.get("components_with_known_versions", "—"),
+                unknown=statistics.get("components_with_unknown_versions", "—"),
+                cpes=statistics.get("components_with_cpe_candidates", "—"),
+                duration=measurement["scan_duration_seconds"] or "—",
+            )
+        )
+    lines.extend(
+        [
+            "",
+            "## Limitations",
+            "",
+            "- Only AP96 had a reusable extracted root filesystem in this workspace.",
+            (
+                "- The active Windows environment has no `binwalk` or `unsquashfs` on "
+                "PATH, so other images were not extracted."
+            ),
+            (
+                "- No retained legacy detector implementation is available; no "
+                "before/after count is reported."
+            ),
+            (
+                "- DD-WRT images were excluded because their legacy SquashFS extraction "
+                "was not validated in this environment."
+            ),
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
+def main() -> None:
+    measurements = [
+        _measurement(FIRMWARE / image_name, rootfs)
+        for image_name, rootfs in OPENWRT_IMAGES
+    ]
+    OUTPUT.mkdir(parents=True, exist_ok=True)
+    (OUTPUT / "inventory-results.json").write_text(
+        json.dumps({"measurements": measurements}, indent=2) + "\n", encoding="utf-8"
+    )
+    rows = _csv_rows(measurements)
+    with (OUTPUT / "inventory-results.csv").open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=sorted({key for row in rows for key in row}))
+        writer.writeheader()
+        writer.writerows(rows)
+    (OUTPUT / "README.md").write_text(_readme(measurements), encoding="utf-8")
+
+
+if __name__ == "__main__":
+    main()

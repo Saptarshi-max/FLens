@@ -31,6 +31,15 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         binwalk \
         squashfs-tools \
+        p7zip-full \
+        unzip \
+        file \
+        gzip \
+        xz-utils \
+        cpio \
+        lz4 \
+        git \
+        build-essential \
         liblzma5 \
         zlib1g \
     && rm -rf /var/lib/apt/lists/*
@@ -41,8 +50,9 @@ RUN sasquatch -version || test -x /usr/local/bin/sasquatch
 
 COPY pyproject.toml README.md /app/
 COPY app /app/app
-COPY sample_data /app/sample_data
+COPY scripts /app/scripts
 
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir uv && uv pip install --system -e .
 
-ENTRYPOINT ["flens"]
+WORKDIR /workspace
+CMD ["python", "/app/scripts/scan_sample_firmware.py", "--input-dir", "/workspace/sample_data", "--output-dir", "/workspace/output/sample-scans", "--work-dir", "/work"]

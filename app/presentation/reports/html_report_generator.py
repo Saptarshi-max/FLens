@@ -25,6 +25,8 @@ class HtmlReportGenerator(ReportGenerator):
             scan_result=scan_result,
             risk_breakdown=self._risk_breakdown(scan_result),
             methodology_links=self._methodology_links(),
+            inventory=self._inventory(scan_result),
+            identity=self._identity(scan_result),
         )
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -75,3 +77,79 @@ class HtmlReportGenerator(ReportGenerator):
                 }
             )
         return links
+
+    @staticmethod
+    def _inventory(scan_result: ScanResult) -> dict[str, Any] | None:
+        stats = scan_result.inventory_statistics
+        if stats is None:
+            return None
+        total = stats.merged_components
+        return {
+            "stats": stats,
+            "version_coverage": stats.components_with_known_versions / total if total else 0,
+            "cpe_coverage": stats.components_with_cpe_candidates / total if total else 0,
+            "diagnostics": scan_result.inventory_diagnostics[:20],
+            "busybox": next((c for c in scan_result.components if c.name == "busybox"), None),
+        }
+
+    @classmethod
+    def _identity(cls, scan_result: ScanResult) -> dict[str, Any] | None:
+        stats = scan_result.identity_statistics
+        if stats is None:
+            return None
+        # Surface review-worthy records first, then compatibility fallback and
+        # governed mappings, with intentional exclusions last. Name/version
+        # tie-breakers make the presentation independent of discovery order.
+        status_priority = {
+            "ambiguous": 0,
+            "unsupported": 1,
+            "insufficient_evidence": 2,
+            "excluded": 5,
+        }
+        sortable_records: list[tuple[int, int, str, str, dict[str, Any]]] = []
+        for component in scan_result.components:
+            resolution = component.identity_resolution
+            if resolution is None:
+                continue
+            priority = status_priority.get(resolution.resolution_status)
+            if priority is None:
+                priority = 3 if component.cpe_source == "legacy" else 4
+            record = {
+                "name": component.name,
+                "version": component.version,
+                "canonical_vendor": resolution.canonical_vendor,
+                "canonical_product": resolution.canonical_product,
+                "status": resolution.resolution_status,
+                "confidence": resolution.confidence,
+                "rule_id": resolution.rule_id,
+                "cpe_source": component.cpe_source,
+                "governed_cpes": resolution.cpe_candidates[: cls.MAX_IDENTITY_CPES],
+                "omitted_cpes": max(0, len(resolution.cpe_candidates) - cls.MAX_IDENTITY_CPES),
+                "evidence": resolution.evidence[: cls.MAX_IDENTITY_EVIDENCE],
+                "omitted_evidence": max(
+                    0, len(resolution.evidence) - cls.MAX_IDENTITY_EVIDENCE
+                ),
+            }
+            sortable_records.append(
+                (
+                    priority,
+                    0,
+                    component.name,
+                    component.version,
+                    record,
+                )
+            )
+        sortable_records.sort(key=lambda item: item[:4])
+        records = [item[4] for item in sortable_records[: cls.MAX_IDENTITY_ROWS]]
+        return {
+            "stats": stats,
+            "coverage": stats.governed_cpe_components / stats.status_total
+            if stats.status_total
+            else 0,
+            "records": records,
+            "omitted": max(0, len(sortable_records) - cls.MAX_IDENTITY_ROWS),
+        }
+
+    MAX_IDENTITY_ROWS = 20
+    MAX_IDENTITY_EVIDENCE = 3
+    MAX_IDENTITY_CPES = 3

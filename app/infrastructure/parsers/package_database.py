@@ -9,6 +9,8 @@ class PackageRecord:
     name: str
     version: str
     evidence: Evidence
+    architecture: str = "Unknown"
+    dependencies: tuple[str, ...] = ()
 
 
 class PackageDatabaseParser:
@@ -51,8 +53,17 @@ class PackageDatabaseParser:
             name, version = fields.get("package"), fields.get("version")
             if name and version:
                 detail = f"Package: {name}; Version: {version}"
+                dependencies = tuple(
+                    item.strip() for item in fields.get("depends", "").split(",") if item.strip()
+                )
                 records.append(
-                    PackageRecord(name, version, Evidence(format_name, str(path), detail))
+                    PackageRecord(
+                        name,
+                        version,
+                        Evidence(format_name, str(path), detail),
+                        fields.get("architecture", "Unknown"),
+                        dependencies,
+                    )
                 )
         return records
 

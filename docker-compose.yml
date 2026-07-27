@@ -1,0 +1,20 @@
+services:
+  flens:
+    build: .
+    volumes:
+      - ./sample_data:/workspace/sample_data:ro
+      - ./output:/workspace/output
+      - flens-work:/work
+    command:
+      - python
+      - /app/scripts/scan_sample_firmware.py
+      - --input-dir
+      - ${FLENS_INPUT_DIR:-/workspace/sample_data}
+      - --output-dir
+      - ${FLENS_OUTPUT_DIR:-/workspace/output/sample-scans}
+      - --work-dir
+      - /work
+      - --overwrite
+
+volumes:
+  flens-work:

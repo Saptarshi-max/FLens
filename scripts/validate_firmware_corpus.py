@@ -1,3 +1,7 @@
+"""Print inventory details for prepared firmware images."""
+
 from firmware_corpus import FIRMWARE, sha256
+
 for path in FIRMWARE.rglob("*"):
-    if path.is_file(): print(f"{path}: {path.stat().st_size} bytes sha256={sha256(path)}")
+    if path.is_file():
+        print(f"{path}: {path.stat().st_size} bytes sha256={sha256(path)}")

@@ -121,6 +121,59 @@
       <div class="risk risk-{{ scan_result.risk_score.lower() }}">Risk Score: {{ scan_result.risk_score }}</div>
     </section>
 
+    {% if inventory %}
+    <section class="panel">
+      <h2>Inventory Coverage and Scan Diagnostics</h2>
+      <p class="note">Components: {{ inventory.stats.merged_components }} merged from {{ inventory.stats.raw_components_discovered }} raw discoveries.</p>
+      <p class="note">Version coverage: {{ '%.0f'|format(inventory.version_coverage * 100) }}% · CPE coverage: {{ '%.0f'|format(inventory.cpe_coverage * 100) }}%</p>
+      <p class="note">ELF: {{ inventory.stats.elf_files_examined }} examined; {{ inventory.stats.elf_executables_discovered }} executables; {{ inventory.stats.elf_libraries_discovered }} libraries.</p>
+      <p class="note">Extraction placeholders: {{ inventory.stats.extraction_placeholder_entries }} · Open/read failures: {{ inventory.stats.open_read_failures }} · Unreadable files: {{ inventory.stats.elf_unreadable_files }}.</p>
+      {% if inventory.stats.elf_discovery_limit_reached %}<p class="note"><strong>Warning:</strong> ELF discovery limit reached; inventory is incomplete.</p>{% endif %}
+      {% if inventory.version_coverage < 0.8 or inventory.cpe_coverage < 0.5 %}<p class="note"><strong>Coverage warning:</strong> Low version or CPE coverage reduces assessment confidence. No CVEs found does not necessarily mean the firmware is vulnerability-free.</p>{% endif %}
+      {% if inventory.stats.extraction_placeholder_entries %}<p class="note">Extraction placeholders may represent Linux links not preserved by the host environment.</p>{% endif %}
+      {% if inventory.diagnostics %}<p class="note">Representative failures:</p><ul>{% for path, type, reason in inventory.diagnostics %}<li class="mono">{{ reason }}: {{ type }} ({{ path }})</li>{% endfor %}</ul>{% endif %}
+      {% if inventory.busybox %}{% set applets = inventory.busybox.metadata|selectattr('0', 'equalto', 'applet')|list %}<p class="note">BusyBox applets recognised: {{ applets|length }} {% for item in applets[:20] %}<span class="mono">{{ item[1] }}</span> {% endfor %}</p>{% endif %}
+    </section>
+    {% endif %}
+
+    {% if identity %}
+    <section class="panel">
+      <h3>Identity Resolution</h3>
+      <p class="note">Resolved {{ identity.stats.resolved }} · Excluded {{ identity.stats.excluded }} · Ambiguous {{ identity.stats.ambiguous }} · Unsupported {{ identity.stats.unsupported }} · Insufficient evidence {{ identity.stats.insufficient_evidence }}</p>
+      <p class="note">Governed CPE components: {{ identity.stats.governed_cpe_components }} ({{ '%.0f'|format(identity.coverage * 100) }}%) · Legacy fallback: {{ identity.stats.legacy_cpe_components }} · No CPE: {{ identity.stats.no_cpe_components }}</p>
+      {% if identity.stats.ambiguous %}<p class="note">Ambiguous identities require manual review.</p>{% endif %}
+      {% if identity.stats.unsupported %}<p class="note">Unsupported identities are outside the current resolver policy.</p>{% endif %}
+      {% if identity.stats.insufficient_evidence %}<p class="note">Insufficient evidence prevents safe canonical mapping.</p>{% endif %}
+      {% if identity.stats.legacy_cpe_components %}<p class="note">Legacy CPE fallback is ungoverned compatibility behaviour.</p>{% endif %}
+      {% if identity.coverage < 0.5 %}<p class="note">Low governed-CPE coverage limits vulnerability-assessment confidence.</p>{% endif %}
+      <table>
+        <thead>
+          <tr><th>Observed</th><th>Canonical</th><th>Status / Rule</th><th>CPE source</th><th>Evidence</th></tr>
+        </thead>
+        <tbody>
+        {% for record in identity.records %}
+          <tr>
+            <td>{{ record.name }} {{ record.version }}</td>
+            <td>{{ record.canonical_vendor or '-' }} / {{ record.canonical_product or '-' }}</td>
+            <td>{{ record.status }} / {{ record.rule_id }} ({{ record.confidence }})</td>
+            <td>
+              {{ record.cpe_source }}{% if record.cpe_source == 'legacy' %} (legacy fallback){% endif %}
+              {% for cpe in record.governed_cpes %}<div class="mono">{{ cpe }}</div>{% endfor %}
+              {% if record.omitted_cpes %}<div>{{ record.omitted_cpes }} CPE candidates omitted.</div>{% endif %}
+            </td>
+            <td>
+              {% for item in record.evidence %}<div><span class="mono">{{ item.source }}</span>: {{ item.detail }}</div>{% else %}none{% endfor %}
+              {% if record.omitted_evidence %}<div>{{ record.omitted_evidence }} evidence items omitted.</div>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% if identity.omitted %}<p class="note">{{ identity.omitted }} identity records omitted by the report limit.</p>{% endif %}
+      <p class="note">Excluded components are intentionally omitted from canonical mapping and are not scan failures.</p>
+    </section>
+    {% endif %}
+
     <section class="panel">
       <h2>Detected Components</h2>
       {% if scan_result.components %}
