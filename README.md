@@ -1,9 +1,10 @@
 # Flens
 
-**FLENS (Firmware Linux Embedded Security)** is an offline-first firmware analysis
-platform for embedded Linux images. It helps engineers understand what software
-is inside a firmware image, which versions can be identified, which known
-vulnerabilities may apply, and produces HTML, [CycloneDX](https://cyclonedx.org/), and [SPDX](https://spdx.dev/) reports.
+**FLENS (Firmware Linux Embedded Security)** analyses embedded Linux firmware
+without sending the image or its contents to an external service. It inventories
+software, records how versions were identified, correlates the results with a
+local vulnerability dataset, and produces HTML, [CycloneDX](https://cyclonedx.org/),
+and [SPDX](https://spdx.dev/) reports.
 
 > **Alpha status.** FLENS is an alpha-stage analysis tool, not a guarantee that firmware is
 > secure. Zero matched vulnerabilities does not mean zero vulnerabilities.
@@ -12,7 +13,7 @@ vulnerabilities may apply, and produces HTML, [CycloneDX](https://cyclonedx.org/
 ## Features
 
 - Offline firmware analysis
-- Evidence-backed component identification
+- Traceable component and version identification
 - Conservative CPE (Common Platform Enumeration) mapping
 - Offline [CVE](https://en.wikipedia.org/wiki/Common_Vulnerabilities_and_Exposures) correlation
 - [CycloneDX](https://cyclonedx.org/) and [SPDX](https://spdx.dev/) SBOM generation
@@ -22,23 +23,19 @@ vulnerabilities may apply, and produces HTML, [CycloneDX](https://cyclonedx.org/
 
 ## Why FLENS
 
-Embedded firmware is difficult to inspect reproducibly: extraction varies by format, component
-names are ambiguous, CPE mapping needs governance, and SBOM/vulnerability output needs evidence
-and limitations. FLENS makes these decisions visible rather than silently guessing.
+Firmware analysis rarely ends with unpacking an image. Package metadata may be
+missing, binaries may report incomplete versions, and the name found in a
+filesystem may not map cleanly to a CPE. FLENS keeps the observations behind
+each identification in the result, and leaves an identity unresolved when the
+available data is not strong enough.
 
-FLENS is intended for:
-
-- Embedded Linux engineers
-- Firmware security researchers
-- Product security teams
-- SBOM generation
-- Vulnerability assessment
-- Supply-chain analysis
+The project is developed against real router and embedded-Linux images rather
+than a synthetic happy path. The published validation corpus currently includes
+15 images across MIPS and ARM targets: 11 produce reports and four document
+extraction failures. Those failures are kept in the results because format
+coverage is part of the problem, not something to hide from the benchmark.
 
 ## Where FLENS fits
-
-FLENS is intended for firmware security researchers, embedded Linux engineers,
-SBOM generation, and vulnerability assessment workflows.
 
 It sits between firmware acquisition and manual reverse engineering:
 
@@ -63,17 +60,11 @@ Extraction
         ▼
 Security review / Compliance / Further reverse engineering
 ```
-### FLENS is designed to answer:
-
-- What software is inside this firmware?
-- Which component versions can be supported by evidence?
-- Which identities can safely map to a CPE?
-- Which known vulnerabilities match that evidence?
-- What remains unknown and requires manual investigation?
-
-It is not a firmware extractor, vulnerability scanner or reverse-engineering
-framework alone. It provides a reproducible analysis pipeline that connects these
-steps into a single evidence-driven workflow.
+The output shows what software FLENS found, how it derived each version and
+identity, which local vulnerability records matched, and which findings still
+need manual investigation. Extraction, inventory, identity resolution, CPE
+selection, vulnerability correlation, and report generation run as one
+reproducible pipeline. Deeper reverse engineering remains a separate step.
 
 ## Current capabilities
 
@@ -155,8 +146,9 @@ Results:
 Detailed validation evidence is available in
 [`docs/release-evidence`](docs/release-evidence/v0.3.0-alpha/).
 
-> FLENS is an evidence-driven analysis tool. Zero matched vulnerabilities does
-> **not** imply that firmware is secure or free from vulnerabilities.
+> A result of zero matched vulnerabilities only describes the configured local
+> dataset and the components FLENS could identify. It is not proof that the
+> firmware is secure.
 
 
 ## Validated Firmware Reports
@@ -323,15 +315,21 @@ does not provide regulatory-compliance guarantees.
 
 ## Roadmap
 
-Planned improvements include:
+FLENS is moving from a single scan pipeline toward a traceable firmware analysis
+system. The goal is to preserve raw observations, explain how each conclusion
+was reached, and keep results reproducible as tools and vulnerability data change.
 
-- Improved version extraction
-- Additional filesystem support
-- Expanded CPE coverage
-- Maintained and updateable CVE data
-- Firmware release diffing for components, versions, files, SBOMs, and vulnerability changes
-- Richer HTML and comparison reports
-- Performance and large-batch improvements
+1. **Domain foundation:** model analysis projects, firmware artifacts, tool runs,
+   and provenance with stable identifiers and deterministic serialization.
+2. **Analysis model:** separate observations from component identities, findings,
+   and review decisions so conflicting or uncertain data is not discarded.
+3. **Collector migration:** move package, binary, and ELF analysis onto the new
+   model while preserving current CLI commands, reports, and SBOM output.
+4. **Interoperability:** add a versioned analysis export, updateable vulnerability
+   data, firmware-release comparison, and OpenVEX output.
+
+The [migration plan](docs/architecture/migration-plan.md) contains the detailed
+sequence, compatibility requirements, and suggested contribution boundaries.
 
 ## Quality
 
